@@ -43,7 +43,6 @@ result = lx.extract(
     model_id="gemini-2.5-flash",
 )
 
-
 # Save the results to a JSONL file
 lx.io.save_annotated_documents([result], output_name="extraction_results.jsonl")
 
