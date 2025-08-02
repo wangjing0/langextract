@@ -2,7 +2,7 @@ import langextract as lx
 import textwrap
 
 # 1. Define the prompt and extraction rules
-prompt = textwrap.dedent("""\
+prompt = textwrap.dedent("""
     Extract Named Entities, Relationships, and their attributes in order of appearance.
     Use exact text for extractions. Do not paraphrase or overlap entities.
     Provide meaningful descriptions for each entity to add context.
@@ -50,7 +50,7 @@ examples = [
     )
 ]
 
-input_text = """"
+input_text = """
 Langfun is a PyGlove powered library that aims to make language models (LM) fun to work with. Its central principle is to enable seamless integration between natural language and programming by treating language as functions. Through the introduction of Object-Oriented Prompting, Langfun empowers users to prompt LLMs using objects and types, offering enhanced control and simplifying agent development.
 
 To unlock the magic of Langfun, you can start with Langfun 101. Notably, Langfun is compatible with popular LLMs such as Gemini, GPT, Claude, all without the need for additional fine-tuning.

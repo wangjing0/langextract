@@ -52,6 +52,7 @@ def extract(
     format_type: data.FormatType = data.FormatType.JSON,
     max_char_buffer: int = 1000,
     temperature: float = 0.5,
+    seed: int | None = None,
     fence_output: bool = False,
     use_schema_constraints: bool = True,
     batch_length: int = 10,
@@ -90,6 +91,9 @@ def extract(
       temperature: The sampling temperature for generation. Higher values (e.g.,
         0.5) can improve performance with schema constraints on some models by
         reducing repetitive outputs. Defaults to 0.5.
+      seed: Random seed for deterministic generation. Currently only supported
+        by Ollama models. Claude models store this parameter but it has no effect
+        as the Anthropic API does not yet support seed parameters (as of Jan 2025).
       fence_output: Whether to expect/generate fenced output (```json or
         ```yaml). When True, the model is prompted to generate fenced output and
         the resolver expects it. When False, raw JSON/YAML is expected. If your
@@ -193,6 +197,7 @@ def extract(
       "claude_schema": model_schema,
       "format_type": format_type,
       "temperature": temperature,
+      "seed": seed,
       "model_url": model_url,
       "constraint": schema_constraint,
       "max_workers": max_workers,

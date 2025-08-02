@@ -308,6 +308,7 @@ class ClaudeLanguageModel(BaseLanguageModel):
   claude_schema: schema.ClaudeSchema | None = None
   format_type: data.FormatType = data.FormatType.JSON
   temperature: float = 0.0
+  seed: int | None = None
   max_workers: int = 10
   _extra_kwargs: dict[str, Any] = dataclasses.field(
       default_factory=dict, repr=False, compare=False
@@ -320,6 +321,7 @@ class ClaudeLanguageModel(BaseLanguageModel):
       claude_schema: schema.ClaudeSchema | None = None,
       format_type: data.FormatType = data.FormatType.JSON,
       temperature: float = 0.0,
+      seed: int | None = None,
       max_workers: int = 10,
       **kwargs,
   ) -> None:
@@ -331,6 +333,9 @@ class ClaudeLanguageModel(BaseLanguageModel):
       claude_schema: Optional schema for structured output.
       format_type: Output format (JSON or YAML).
       temperature: Sampling temperature.
+      seed: Random seed for deterministic generation. Currently has no effect
+        as the Anthropic API does not support seed parameters (as of Jan 2025).
+        Stored for future compatibility.
       max_workers: Maximum number of parallel API calls.
       **kwargs: Ignored extra parameters so callers can pass a superset of
         arguments shared across back-ends without raising ``TypeError``.
@@ -340,6 +345,7 @@ class ClaudeLanguageModel(BaseLanguageModel):
     self.claude_schema = claude_schema
     self.format_type = format_type
     self.temperature = temperature
+    self.seed = seed
     self.max_workers = max_workers
     self._extra_kwargs = kwargs or {}
 
@@ -360,12 +366,24 @@ class ClaudeLanguageModel(BaseLanguageModel):
         schema_instruction = f"\n\nPlease respond in valid JSON format matching this schema: {self.claude_schema.schema_dict}"
         prompt = prompt + schema_instruction
 
-      response = self._client.messages.create(
-          model=self.model_id,
-          max_tokens=config.get('max_output_tokens', 1024),
-          temperature=config.get('temperature', self.temperature),
-          messages=[{'role': 'user', 'content': prompt}]
-      )
+      # Build API call parameters
+      api_params = {
+          'model': self.model_id,
+          'max_tokens': config.get('max_output_tokens', 1024),
+          'temperature': config.get('temperature', self.temperature),
+          'messages': [{'role': 'user', 'content': prompt}]
+      }
+      
+      # Add seed if provided
+      # Note: As of January 2025, Anthropic Claude API does not support seed parameters
+      # This parameter is stored for future compatibility but currently has no effect
+      seed_value = config.get('seed', self.seed)
+      if seed_value is not None:
+        # Log that seed is requested but not supported
+        import logging
+        logging.debug(f"Seed parameter {seed_value} requested but not supported by current Anthropic API")
+      
+      response = self._client.messages.create(**api_params)
 
       return ScoredOutput(score=1.0, output=response.content[0].text)
 
@@ -389,6 +407,8 @@ class ClaudeLanguageModel(BaseLanguageModel):
     }
     if 'max_output_tokens' in kwargs:
       config['max_output_tokens'] = kwargs['max_output_tokens']
+    if 'seed' in kwargs:
+      config['seed'] = kwargs['seed']
     if 'top_p' in kwargs:
       config['top_p'] = kwargs['top_p']
     if 'top_k' in kwargs:

@@ -139,5 +139,86 @@ class TestOllamaLanguageModel(absltest.TestCase):
     self.assertEqual(results, expected_results)
 
 
+class TestClaudeLanguageModel(absltest.TestCase):
+
+  def test_claude_seed_parameter_initialization(self):
+    """Test that ClaudeLanguageModel properly initializes with seed parameter."""
+    test_seed = 12345
+    
+    # This will fail initialization due to no API key, but we can catch that
+    # and verify the seed parameter is properly handled
+    try:
+      model = inference.ClaudeLanguageModel(
+          api_key="test_key",
+          seed=test_seed
+      )
+      self.assertEqual(model.seed, test_seed)
+    except ValueError as e:
+      # Expected error due to invalid API key
+      if "API key not provided" in str(e):
+        # Test that the parameter is accepted in the constructor
+        pass
+      else:
+        raise
+
+  @mock.patch('anthropic.Anthropic')
+  def test_claude_seed_stored_but_not_passed(self, mock_anthropic):
+    """Test that seed parameter is stored but not passed to Claude API (unsupported)."""
+    mock_client = mock.Mock()
+    mock_anthropic.return_value = mock_client
+    
+    # Mock the API response
+    mock_response = mock.Mock()
+    mock_response.content = [mock.Mock(text="Test response")]
+    mock_client.messages.create.return_value = mock_response
+    
+    test_seed = 42
+    model = inference.ClaudeLanguageModel(
+        api_key="test_key",
+        seed=test_seed
+    )
+    
+    # Test single prompt processing
+    result = model._process_single_prompt("Test prompt", {})
+    
+    # Verify the API was called WITHOUT seed parameter (since it's not supported)
+    mock_client.messages.create.assert_called_once()
+    call_args = mock_client.messages.create.call_args
+    api_params = call_args[1] if call_args[1] else call_args[0][0]
+    
+    # Seed should NOT be in the API call since it's not supported
+    self.assertNotIn('extra_body', api_params)
+    self.assertNotIn('seed', api_params)
+    
+    # But the model should still store the seed value
+    self.assertEqual(model.seed, test_seed)
+
+  @mock.patch('anthropic.Anthropic')
+  def test_claude_seed_from_kwargs_not_passed(self, mock_anthropic):
+    """Test that seed parameter from kwargs is processed but not passed to API."""
+    mock_client = mock.Mock()
+    mock_anthropic.return_value = mock_client
+    
+    # Mock the API response
+    mock_response = mock.Mock()
+    mock_response.content = [mock.Mock(text="Test response")]
+    mock_client.messages.create.return_value = mock_response
+    
+    model = inference.ClaudeLanguageModel(api_key="test_key")
+    
+    # Test with seed passed via kwargs
+    runtime_seed = 999
+    list(model.infer(["Test prompt"], seed=runtime_seed))
+    
+    # Verify the API was called WITHOUT seed parameter (since it's not supported)
+    mock_client.messages.create.assert_called_once()
+    call_args = mock_client.messages.create.call_args
+    api_params = call_args[1] if call_args[1] else call_args[0][0]
+    
+    # Seed should NOT be in the API call since it's not supported
+    self.assertNotIn('extra_body', api_params)
+    self.assertNotIn('seed', api_params)
+
+
 if __name__ == "__main__":
   absltest.main()

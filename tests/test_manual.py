@@ -46,14 +46,11 @@ def test_claude_schema():
     claude_schema = schema.ClaudeSchema.from_examples(examples_data)
     actual_schema = claude_schema.schema_dict
 
-    if actual_schema == expected_schema:
-        print("✅ ClaudeSchema test PASSED")
-        return True
-    else:
-        print("❌ ClaudeSchema test FAILED")
-        print("Expected:", expected_schema)
-        print("Actual:", actual_schema)
-        return False
+    assert actual_schema == expected_schema, (
+        f"ClaudeSchema test FAILED\n"
+        f"Expected: {expected_schema}\n"
+        f"Actual: {actual_schema}"
+    )
 
 def test_claude_language_model():
     """Test that ClaudeLanguageModel can be imported and initialized."""
@@ -66,21 +63,17 @@ def test_claude_language_model():
     assert not hasattr(inference, 'GeminiLanguageModel'), "GeminiLanguageModel still exists"
     
     # Test initialization
-    try:
-        model = inference.ClaudeLanguageModel(api_key='dummy_key')
-        assert model.model_id == 'claude-3-5-haiku-latest', f"Wrong default model: {model.model_id}"
-        print("✅ ClaudeLanguageModel test PASSED")
-        return True
-    except Exception as e:
-        print(f"❌ ClaudeLanguageModel test FAILED: {e}")
-        return False
+    model = inference.ClaudeLanguageModel(api_key='dummy_key')
+    assert model.model_id == 'claude-3-5-haiku-latest', f"Wrong default model: {model.model_id}"
 
 if __name__ == "__main__":
-    schema_passed = test_claude_schema()
-    model_passed = test_claude_language_model()
-    
-    if schema_passed and model_passed:
+    try:
+        test_claude_schema()
+        test_claude_language_model()
         print("\n🎉 ALL TESTS PASSED - Gemini to Claude migration successful!")
-    else:
-        print("\n💥 Some tests failed!")
+    except AssertionError as e:
+        print(f"\n💥 Test failed: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n💥 Unexpected error: {e}")
         sys.exit(1)
