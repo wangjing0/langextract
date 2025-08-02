@@ -70,3 +70,8 @@ include-package-data = false
 [tool.pytest]
 testpaths = ["tests"]
 python_files = "*_test.py" 
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+]

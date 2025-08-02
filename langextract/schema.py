@@ -61,11 +61,11 @@ class BaseSchema(abc.ABC):
 
 
 @dataclasses.dataclass
-class GeminiSchema(BaseSchema):
-  """Schema implementation for Gemini structured output.
+class ClaudeSchema(BaseSchema):
+  """Schema implementation for Claude structured output.
 
   Converts ExampleData objects into an OpenAPI/JSON-schema definition
-  that Gemini can interpret via 'response_schema'.
+  that Claude can interpret via structured output.
   """
 
   _schema_dict: dict
@@ -85,8 +85,8 @@ class GeminiSchema(BaseSchema):
       cls,
       examples_data: Sequence[data.ExampleData],
       attribute_suffix: str = "_attributes",
-  ) -> GeminiSchema:
-    """Creates a GeminiSchema from example extractions.
+  ) -> ClaudeSchema:
+    """Creates a ClaudeSchema from example extractions.
 
     Builds a JSON-based schema with a top-level "extractions" array. Each
     element in that array is an object containing the extraction class name
@@ -99,7 +99,7 @@ class GeminiSchema(BaseSchema):
         attributes field name (defaults to "_attributes").
 
     Returns:
-      A GeminiSchema with internal dictionary represents the JSON constraint.
+      A ClaudeSchema with internal dictionary represents the JSON constraint.
     """
     # Track attribute types for each category
     extraction_categories: dict[str, dict[str, set[type]]] = {}

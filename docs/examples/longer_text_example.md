@@ -6,7 +6,7 @@ LangExtract can process entire documents directly from URLs, handling large text
 
 The following code uses a comprehensive prompt and examples optimized for large, complex literary texts. For large complex inputs, using more detailed examples is suggested to increase extraction robustness.
 
-> **Warning:** Running this example processes a large document (~44 000 tokens) and will incur costs. For large-scale use, a Tier 2 Gemini quota is suggested to avoid rate-limit issues ([details](https://ai.google.dev/gemini-api/docs/rate-limits#tier-2)). Please review the [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing) before proceeding.
+> **Warning:** Running this example processes a large document (~44 000 tokens) and will incur costs. Please review the [Claude API pricing](https://www.anthropic.com/pricing) before proceeding.
 
 ```python
 import langextract as lx
@@ -67,7 +67,7 @@ result = lx.extract(
     text_or_documents="https://www.gutenberg.org/files/1513/1513-0.txt",
     prompt_description=prompt,
     examples=examples,
-    model_id="gemini-2.5-flash",
+    model_id="claude-3-5-haiku-latest",
     extraction_passes=3,      # Multiple passes for improved recall
     max_workers=20,           # Parallel processing for speed
     max_char_buffer=1000      # Smaller contexts for better accuracy
@@ -171,4 +171,4 @@ LangExtract combines precise text positioning with world knowledge enrichment, e
 
 ---
 
-¹ Models like Gemini 1.5 Pro show strong performance on many benchmarks, but [needle-in-a-haystack tests](https://cloud.google.com/blog/products/ai-machine-learning/the-needle-in-the-haystack-test-and-how-gemini-pro-solves-it) across million-token contexts indicate that performance can vary in multi-fact retrieval scenarios. This demonstrates how LangExtract's smaller context windows approach ensures consistently high quality across entire documents by avoiding the complexity and potential degradation of massive single-context processing.
+¹ Large language models show strong performance on many benchmarks, but performance can vary in multi-fact retrieval scenarios across very long contexts. This demonstrates how LangExtract's smaller context windows approach ensures consistently high quality across entire documents by avoiding the complexity and potential degradation of massive single-context processing.

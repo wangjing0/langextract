@@ -28,16 +28,16 @@ from langextract import schema
 class InitTest(absltest.TestCase):
   """Test cases for the main package functions."""
 
-  @mock.patch.object(schema.GeminiSchema, "from_examples", autospec=True)
-  @mock.patch.object(inference.GeminiLanguageModel, "infer", autospec=True)
+  @mock.patch.object(schema.ClaudeSchema, "from_examples", autospec=True)
+  @mock.patch.object(inference.ClaudeLanguageModel, "infer", autospec=True)
   def test_lang_extract_as_lx_extract(
-      self, mock_gemini_model_infer, mock_gemini_schema
+      self, mock_claude_model_infer, mock_claude_schema
   ):
 
     input_text = "Patient takes Aspirin 100mg every morning."
 
     # Mock the language model's response
-    mock_gemini_model_infer.return_value = [[
+    mock_claude_model_infer.return_value = [[
         inference.ScoredOutput(
             output=textwrap.dedent("""\
             ```json
@@ -63,7 +63,7 @@ class InitTest(absltest.TestCase):
         )
     ]]
 
-    mock_gemini_schema.return_value = None  # No live endpoint to process schema
+    mock_claude_schema.return_value = None  # No live endpoint to process schema
 
     expected_result = data.AnnotatedDocument(
         document_id=None,
@@ -128,12 +128,12 @@ class InitTest(absltest.TestCase):
         use_schema_constraints=False,
     )
 
-    mock_gemini_schema.assert_not_called()
-    mock_gemini_model_infer.assert_called_once_with(
-        inference.GeminiLanguageModel(
-            model_id="gemini-2.5-flash",
+    mock_claude_schema.assert_not_called()
+    mock_claude_model_infer.assert_called_once_with(
+        inference.ClaudeLanguageModel(
+            model_id="claude-3-5-haiku-latest",
             api_key="some_api_key",
-            gemini_schema=None,
+            claude_schema=None,
             format_type=data.FormatType.JSON,
             temperature=0.5,
         ),

@@ -300,12 +300,12 @@ class OllamaLanguageModel(BaseLanguageModel):
 
 
 @dataclasses.dataclass(init=False)
-class GeminiLanguageModel(BaseLanguageModel):
-  """Language model inference using Google's Gemini API with structured output."""
+class ClaudeLanguageModel(BaseLanguageModel):
+  """Language model inference using Anthropic's Claude API with structured output."""
 
   model_id: str = 'claude-3-5-haiku-latest'
   api_key: str | None = None
-  gemini_schema: schema.GeminiSchema | None = None
+  claude_schema: schema.ClaudeSchema | None = None
   format_type: data.FormatType = data.FormatType.JSON
   temperature: float = 0.0
   max_workers: int = 10
@@ -317,18 +317,18 @@ class GeminiLanguageModel(BaseLanguageModel):
       self,
       model_id: str = 'claude-3-5-haiku-latest',
       api_key: str | None = None,
-      gemini_schema: schema.GeminiSchema | None = None,
+      claude_schema: schema.ClaudeSchema | None = None,
       format_type: data.FormatType = data.FormatType.JSON,
       temperature: float = 0.0,
       max_workers: int = 10,
       **kwargs,
   ) -> None:
-    """Initialize the Gemini language model.
+    """Initialize the Claude language model.
 
     Args:
-      model_id: The Gemini model ID to use.
-      api_key: API key for Gemini service.
-      gemini_schema: Optional schema for structured output.
+      model_id: The Claude model ID to use.
+      api_key: API key for Claude service.
+      claude_schema: Optional schema for structured output.
       format_type: Output format (JSON or YAML).
       temperature: Sampling temperature.
       max_workers: Maximum number of parallel API calls.
@@ -337,7 +337,7 @@ class GeminiLanguageModel(BaseLanguageModel):
     """
     self.model_id = model_id
     self.api_key = api_key
-    self.gemini_schema = gemini_schema
+    self.claude_schema = claude_schema
     self.format_type = format_type
     self.temperature = temperature
     self.max_workers = max_workers
@@ -356,8 +356,8 @@ class GeminiLanguageModel(BaseLanguageModel):
     """Process a single prompt and return a ScoredOutput."""
     try:
       # For structured output with Claude, we'll add instructions to the prompt
-      if self.gemini_schema:
-        schema_instruction = f"\n\nPlease respond in valid JSON format matching this schema: {self.gemini_schema.schema_dict}"
+      if self.claude_schema:
+        schema_instruction = f"\n\nPlease respond in valid JSON format matching this schema: {self.claude_schema.schema_dict}"
         prompt = prompt + schema_instruction
 
       response = self._client.messages.create(
@@ -370,12 +370,12 @@ class GeminiLanguageModel(BaseLanguageModel):
       return ScoredOutput(score=1.0, output=response.content[0].text)
 
     except Exception as e:
-      raise InferenceOutputError(f'Gemini API error: {str(e)}') from e
+      raise InferenceOutputError(f'Claude API error: {str(e)}') from e
 
   def infer(
       self, batch_prompts: Sequence[str], **kwargs
   ) -> Iterator[Sequence[ScoredOutput]]:
-    """Runs inference on a list of prompts via Gemini's API.
+    """Runs inference on a list of prompts via Claude's API.
 
     Args:
       batch_prompts: A list of string prompts.
@@ -427,7 +427,7 @@ class GeminiLanguageModel(BaseLanguageModel):
         yield [result]
 
   def parse_output(self, output: str) -> Any:
-    """Parses Gemini output as JSON or YAML."""
+    """Parses Claude output as JSON or YAML."""
     try:
       if self.format_type == data.FormatType.JSON:
         return json.loads(output)

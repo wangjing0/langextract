@@ -46,9 +46,9 @@ def extract(
     text_or_documents: str | data.Document | Iterable[data.Document],
     prompt_description: str | None = None,
     examples: Sequence[data.ExampleData] | None = None,
-    model_id: str = "gemini-2.5-flash",
+    model_id: str = "claude-3-5-haiku-latest",
     api_key: str | None = None,
-    language_model_type: Type[LanguageModelT] = inference.GeminiLanguageModel,
+    language_model_type: Type[LanguageModelT] = inference.ClaudeLanguageModel,
     format_type: data.FormatType = data.FormatType.JSON,
     max_char_buffer: int = 1000,
     temperature: float = 0.5,
@@ -76,7 +76,7 @@ def extract(
         of Document objects.
       prompt_description: Instructions for what to extract from the text.
       examples: List of ExampleData objects to guide the extraction.
-      api_key: API key for Gemini or other LLM services (can also use
+      api_key: API key for Claude or other LLM services (can also use
         environment variable LANGEXTRACT_API_KEY). Cost considerations: Most
         APIs charge by token volume. Smaller max_char_buffer values increase the
         number of API calls, while extraction_passes > 1 reprocesses tokens
@@ -102,7 +102,7 @@ def extract(
         Defaults to 10.
       max_workers: Maximum parallel workers for concurrent processing. Effective
         parallelization is limited by min(batch_length, max_workers). Supported
-        by Gemini models. Defaults to 10.
+        by Claude models. Defaults to 10.
       additional_context: Additional context to be added to the prompt during
         inference.
       resolver_params: Parameters for the `resolver.Resolver`, which parses the
@@ -173,15 +173,15 @@ def extract(
   # TODO: Unify schema generation.
   if (
       use_schema_constraints
-      and language_model_type == inference.GeminiLanguageModel
+      and language_model_type == inference.ClaudeLanguageModel
   ):
-    model_schema = schema.GeminiSchema.from_examples(prompt_template.examples)
+    model_schema = schema.ClaudeSchema.from_examples(prompt_template.examples)
 
   if not api_key:
     api_key = os.environ.get("LANGEXTRACT_API_KEY")
 
-    # Currently only Gemini is supported
-    if not api_key and language_model_type == inference.GeminiLanguageModel:
+    # Currently only Claude is supported
+    if not api_key and language_model_type == inference.ClaudeLanguageModel:
       raise ValueError(
           "API key must be provided for cloud-hosted models via the api_key"
           " parameter or the LANGEXTRACT_API_KEY environment variable"
@@ -190,7 +190,7 @@ def extract(
   base_lm_kwargs: dict[str, Any] = {
       "api_key": api_key,
       "model_id": model_id,
-      "gemini_schema": model_schema,
+      "claude_schema": model_schema,
       "format_type": format_type,
       "temperature": temperature,
       "model_url": model_url,

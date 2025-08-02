@@ -37,12 +37,12 @@ class ProgressTest(unittest.TestCase):
   def test_extraction_progress_bar(self):
     """Test extraction progress bar creation."""
     pbar = progress.create_extraction_progress_bar(
-        range(10), "gemini-2.0-flash"
+        range(10), "claude-3-5-haiku"
     )
 
     self.assertIsInstance(pbar, tqdm.tqdm)
     self.assertIn("LangExtract", pbar.desc)
-    self.assertIn("gemini-2.0-flash", pbar.desc)
+    self.assertIn("claude-3-5-haiku", pbar.desc)
 
   def test_save_load_progress_bars(self):
     """Test save and load progress bar creation."""
@@ -58,8 +58,8 @@ class ProgressTest(unittest.TestCase):
     """Test extracting model info from objects."""
     # Test with model_id
     mock_model = mock.MagicMock()
-    mock_model.model_id = "gemini-1.5-pro"
-    self.assertEqual(progress.get_model_info(mock_model), "gemini-1.5-pro")
+    mock_model.model_id = "claude-3-5-haiku"
+    self.assertEqual(progress.get_model_info(mock_model), "claude-3-5-haiku")
 
     # Test with no attributes
     mock_model = mock.MagicMock()
@@ -73,9 +73,9 @@ class ProgressTest(unittest.TestCase):
     self.assertIn("1,500", stats)
     self.assertIn("5,000", stats)
 
-    desc = progress.format_extraction_progress("gemini-2.0-flash")
+    desc = progress.format_extraction_progress("claude-3-5-haiku")
     self.assertIn("LangExtract", desc)
-    self.assertIn("gemini-2.0-flash", desc)
+    self.assertIn("claude-3-5-haiku", desc)
 
     desc_no_model = progress.format_extraction_progress(None)
     self.assertIn("Processing", desc_no_model)

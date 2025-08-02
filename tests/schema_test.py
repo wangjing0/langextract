@@ -25,7 +25,7 @@ from langextract import data
 from langextract import schema
 
 
-class GeminiSchemaTest(parameterized.TestCase):
+class ClaudeSchemaTest(parameterized.TestCase):
 
   @parameterized.named_parameters(
       dict(
@@ -177,8 +177,8 @@ class GeminiSchemaTest(parameterized.TestCase):
   def test_from_examples_constructs_expected_schema(
       self, examples_data, expected_schema
   ):
-    gemini_schema = schema.GeminiSchema.from_examples(examples_data)
-    actual_schema = gemini_schema.schema_dict
+    claude_schema = schema.ClaudeSchema.from_examples(examples_data)
+    actual_schema = claude_schema.schema_dict
     self.assertEqual(actual_schema, expected_schema)
 
 

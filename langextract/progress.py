@@ -83,7 +83,7 @@ def create_extraction_progress_bar(
 
   Args:
     iterable: The iterable to wrap with progress bar.
-    model_info: Optional model information to display (e.g., "gemini-1.5-pro").
+    model_info: Optional model information to display (e.g., "claude-3-5-haiku").
     disable: Whether to disable the progress bar.
 
   Returns:
@@ -304,7 +304,7 @@ def format_extraction_progress(
   """Format the complete extraction progress bar description.
 
   Args:
-    model_info: Optional model information (e.g., "gemini-2.0-flash").
+    model_info: Optional model information (e.g., "claude-3-5-haiku").
     current_chars: Number of characters in current batch (optional).
     processed_chars: Total number of characters processed so far (optional).
 

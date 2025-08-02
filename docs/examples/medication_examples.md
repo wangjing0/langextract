@@ -47,7 +47,7 @@ result = lx.extract(
     text_or_documents=input_text,
     prompt_description=prompt_description,
     examples=examples,
-    model_id="gemini-2.5-pro",
+    model_id="claude-3-5-haiku-latest",
     api_key="your-api-key-here"  # Optional if LANGEXTRACT_API_KEY environment variable is set
 )
 
@@ -164,7 +164,7 @@ result = lx.extract(
     text_or_documents=input_text,
     prompt_description=prompt_description,
     examples=examples,
-    model_id="gemini-2.5-pro",
+    model_id="claude-3-5-haiku-latest",
     api_key="your-api-key-here"  # Optional if LANGEXTRACT_API_KEY environment variable is set
 )
 
