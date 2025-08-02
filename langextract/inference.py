@@ -23,7 +23,7 @@ import json
 import textwrap
 from typing import Any
 
-from google import genai
+import anthropic
 import langfun as lf
 import requests
 from typing_extensions import override
@@ -346,7 +346,7 @@ class GeminiLanguageModel(BaseLanguageModel):
     if not self.api_key:
       raise ValueError('API key not provided.')
 
-    self._client = genai.Client(api_key=self.api_key)
+    self._client = anthropic.Anthropic(api_key=self.api_key)
 
     super().__init__(
         constraint=schema.Constraint(constraint_type=schema.ConstraintType.NONE)
@@ -365,11 +365,18 @@ class GeminiLanguageModel(BaseLanguageModel):
         config['response_mime_type'] = mime_type
         config['response_schema'] = response_schema
 
-      response = self._client.models.generate_content(
-          model=self.model_id, contents=prompt, config=config
+      messages = [{'role': 'user', 'content': prompt}]
+      
+      response = self._client.chat.completions.create(
+          model=self.model_id,
+          messages=messages,
+          temperature=config.get('temperature', self.temperature),
+          max_tokens=config.get('max_output_tokens'),
+          top_p=config.get('top_p'),
+          response_format=({'type': 'json_object'} if self.gemini_schema else None)
       )
 
-      return ScoredOutput(score=1.0, output=response.text)
+      return ScoredOutput(score=1.0, output=response.choices[0].message.content)
 
     except Exception as e:
       raise InferenceOutputError(f'Gemini API error: {str(e)}') from e

@@ -975,7 +975,7 @@ requires-dist = [
     { name = "black", marker = "extra == 'dev'", specifier = ">=23.7.0" },
     { name = "exceptiongroup", specifier = ">=1.1.0" },
     { name = "google-genai", specifier = ">=0.1.0" },
-    { name = "langfun", specifier = ">=0.1.0" },
+    { name = "langfun", specifier = ">=0.1.1" },
     { name = "libmagic", specifier = ">=1.0" },
     { name = "ml-collections", specifier = ">=0.1.0" },
     { name = "more-itertools", specifier = ">=8.0.0" },

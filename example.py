@@ -32,10 +32,11 @@ examples = [
 ]
 
 
+input_text = "Lady Juliet gazed longingly at the stars, her heart aching for Romeo"
 
 # Process Romeo & Juliet directly from Project Gutenberg
 result = lx.extract(
-    text_or_documents="https://www.gutenberg.org/files/1513/1513-0.txt",
+    text_or_documents=input_text, #"https://www.gutenberg.org/files/1513/1513-0.txt",
     prompt_description=prompt,
     examples=examples,
     model_id="gemini-2.5-flash",
