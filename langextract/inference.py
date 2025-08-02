@@ -303,7 +303,7 @@ class OllamaLanguageModel(BaseLanguageModel):
 class GeminiLanguageModel(BaseLanguageModel):
   """Language model inference using Google's Gemini API with structured output."""
 
-  model_id: str = 'gemini-2.5-flash'
+  model_id: str = 'claude-3-5-haiku-latest'
   api_key: str | None = None
   gemini_schema: schema.GeminiSchema | None = None
   format_type: data.FormatType = data.FormatType.JSON
@@ -315,7 +315,7 @@ class GeminiLanguageModel(BaseLanguageModel):
 
   def __init__(
       self,
-      model_id: str = 'gemini-2.5-flash',
+      model_id: str = 'claude-3-5-haiku-latest',
       api_key: str | None = None,
       gemini_schema: schema.GeminiSchema | None = None,
       format_type: data.FormatType = data.FormatType.JSON,
@@ -355,28 +355,19 @@ class GeminiLanguageModel(BaseLanguageModel):
   def _process_single_prompt(self, prompt: str, config: dict) -> ScoredOutput:
     """Process a single prompt and return a ScoredOutput."""
     try:
+      # For structured output with Claude, we'll add instructions to the prompt
       if self.gemini_schema:
-        response_schema = self.gemini_schema.schema_dict
-        mime_type = (
-            'application/json'
-            if self.format_type == data.FormatType.JSON
-            else 'application/yaml'
-        )
-        config['response_mime_type'] = mime_type
-        config['response_schema'] = response_schema
+        schema_instruction = f"\n\nPlease respond in valid JSON format matching this schema: {self.gemini_schema.schema_dict}"
+        prompt = prompt + schema_instruction
 
-      messages = [{'role': 'user', 'content': prompt}]
-      
-      response = self._client.chat.completions.create(
+      response = self._client.messages.create(
           model=self.model_id,
-          messages=messages,
+          max_tokens=config.get('max_output_tokens', 1024),
           temperature=config.get('temperature', self.temperature),
-          max_tokens=config.get('max_output_tokens'),
-          top_p=config.get('top_p'),
-          response_format=({'type': 'json_object'} if self.gemini_schema else None)
+          messages=[{'role': 'user', 'content': prompt}]
       )
 
-      return ScoredOutput(score=1.0, output=response.choices[0].message.content)
+      return ScoredOutput(score=1.0, output=response.content[0].text)
 
     except Exception as e:
       raise InferenceOutputError(f'Gemini API error: {str(e)}') from e
