@@ -32,21 +32,18 @@ examples = [
 ]
 
 
-# The input text to be processed
-input_text = "Lady Juliet gazed longingly at the stars, her heart aching for Romeo"
 
-# Run the extraction
+# Process Romeo & Juliet directly from Project Gutenberg
 result = lx.extract(
-    text_or_documents=input_text,
+    text_or_documents="https://www.gutenberg.org/files/1513/1513-0.txt",
     prompt_description=prompt,
     examples=examples,
     model_id="gemini-2.5-flash",
+    extraction_passes=3,    # Improves recall through multiple passes
+    max_workers=10,         # Parallel processing for speed
+    max_char_buffer=1000    # Smaller contexts for better accuracy
 )
 
-# Save the results to a JSONL file
-lx.io.save_annotated_documents([result], output_name="extraction_results.jsonl")
-
-# Generate the visualization from the file
-html_content = lx.visualize("test_output/extraction_results.jsonl")
-with open("test_output/visualization.html", "w") as f:
+html_content = lx.visualize("test_output/extraction_results_romeo_juliet.jsonl")
+with open("test_output/visualization_romeo_juliet.html", "w") as f:
     f.write(html_content)
