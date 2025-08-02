@@ -14,33 +14,46 @@ examples = [
         text="Models can exhibit dramatic personality shifts at deployment time in response to prompting or context. For example, Microsoft’s Bing chatbot would sometimes slip into a mode of threatening and manipulating users",
         extractions=[
             lx.data.Extraction(
+                extraction_class="Concept",
+                extraction_text="personality",
+                attributes={ "description": "personality is a concept that relates to LLMs"}
+            ),
+            lx.data.Extraction(
+                extraction_class="Concept",
+                extraction_text="prompting",
+                attributes={ "description": "prompting is a concept related to LLMs"}
+            ),
+            lx.data.Extraction(
                 extraction_class="Company",
                 extraction_text="Microsoft",
-                attributes={ "description": "Microsoft is a company that is evil"}
+                attributes={ "description": "Microsoft is a company in the AI technology industry"}
             ),
             lx.data.Extraction(
                 extraction_class="Product",
                 extraction_text="Bing",
-                attributes={"description": "Bing is a product that is evil"}
+                attributes={"description": "Bing is a product by Microsoft"}
+            ),
+            lx.data.Extraction(
+                extraction_class="Product",
+                extraction_text="chatbot",
+                attributes={"description": "chatbot is a function of Bing"}
             ),
             lx.data.Extraction(
                 extraction_class="Relationship",
                 extraction_text="Models can exhibit dramatic personality shifts",
-                attributes={"description": "Models can exhibit dramatic personality shifts at deployment time in response to prompting or context"}
+                attributes={"subject": "Models", 
+                            "relation": "exhibit",
+                            "object": "dramatic personality shifts",
+                            "evidence": "Models can exhibit dramatic personality shifts at deployment time in response to prompting or context"}
             ),
         ]
     )
 ]
 
 input_text = """"
-Large language models interact with users through a simulated “Assistant” persona. While the Assistant is typically trained to be helpful, harmless, and honest,
-it sometimes deviates from these ideals. In this paper, we identify directions in the model’s activation space—persona vectors—underlying several traits, such as
-evil, sycophancy, and propensity to hallucinate. We confirm that these vectors can be used to monitor fluctuations in the Assistant’s personality at deployment time.
-We then apply persona vectors to predict and control personality shifts that occur during training. We find that both intended and unintended personality changes
-after finetuning are strongly correlated with shifts along the relevant persona vectors. These shifts can be mitigated through post-hoc intervention, or avoided in
-the first place with a new preventative steering method. Moreover, persona vectors can be used to flag training data that will produce undesirable personality
-changes, both at the dataset level and the individual sample level. Our method for extracting persona vectors is automated and can be applied to any personality trait
-of interest, given only a natural-language description
+Langfun is a PyGlove powered library that aims to make language models (LM) fun to work with. Its central principle is to enable seamless integration between natural language and programming by treating language as functions. Through the introduction of Object-Oriented Prompting, Langfun empowers users to prompt LLMs using objects and types, offering enhanced control and simplifying agent development.
+
+To unlock the magic of Langfun, you can start with Langfun 101. Notably, Langfun is compatible with popular LLMs such as Gemini, GPT, Claude, all without the need for additional fine-tuning.
 """
 
 # Process Romeo & Juliet directly from Project Gutenberg
