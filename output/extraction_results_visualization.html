@@ -1,0 +1,200 @@
+<style>
+.lx-highlight { position: relative; border-radius:3px; padding:1px 2px;}
+.lx-highlight .lx-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  background: #333;
+  color: #fff;
+  text-align: left;
+  border-radius: 4px;
+  padding: 6px 8px;
+  position: absolute;
+  z-index: 1000;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  max-width: 240px;
+  white-space: normal;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.lx-highlight:hover .lx-tooltip { visibility: visible; opacity:1; }
+.lx-animated-wrapper { max-width: 100%; font-family: Arial, sans-serif; }
+.lx-controls {
+  background: #fafafa; border: 1px solid #90caf9; border-radius: 8px;
+  padding: 12px; margin-bottom: 16px;
+}
+.lx-button-row {
+  display: flex; justify-content: center; gap: 8px; margin-bottom: 12px;
+}
+.lx-control-btn {
+  background: #4285f4; color: white; border: none; border-radius: 4px;
+  padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 500;
+  transition: background-color 0.2s;
+}
+.lx-control-btn:hover { background: #3367d6; }
+.lx-progress-container {
+  margin-bottom: 8px;
+}
+.lx-progress-slider {
+  width: 100%; margin: 0; appearance: none; height: 6px;
+  background: #ddd; border-radius: 3px; outline: none;
+}
+.lx-progress-slider::-webkit-slider-thumb {
+  appearance: none; width: 18px; height: 18px; background: #4285f4;
+  border-radius: 50%; cursor: pointer;
+}
+.lx-progress-slider::-moz-range-thumb {
+  width: 18px; height: 18px; background: #4285f4; border-radius: 50%;
+  cursor: pointer; border: none;
+}
+.lx-status-text {
+  text-align: center; font-size: 12px; color: #666; margin-top: 4px;
+}
+.lx-text-window {
+  font-family: monospace; white-space: pre-wrap; border: 1px solid #90caf9;
+  padding: 12px; max-height: 260px; overflow-y: auto; margin-bottom: 12px;
+  line-height: 1.6;
+}
+.lx-attributes-panel {
+  background: #fafafa; border: 1px solid #90caf9; border-radius: 6px;
+  padding: 8px 10px; margin-top: 8px; font-size: 13px;
+}
+.lx-current-highlight {
+  text-decoration: underline;
+  text-decoration-color: #ff4444;
+  text-decoration-thickness: 3px;
+  font-weight: bold;
+  animation: lx-pulse 1s ease-in-out;
+}
+@keyframes lx-pulse {
+  0% { text-decoration-color: #ff4444; }
+  50% { text-decoration-color: #ff0000; }
+  100% { text-decoration-color: #ff4444; }
+}
+.lx-legend { 
+  font-size: 12px; margin-bottom: 8px; 
+  padding-bottom: 8px; border-bottom: 1px solid #e0e0e0; 
+}
+.lx-label {
+  display: inline-block;
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin-right: 4px;
+  color: #000;
+}
+.lx-attr-key {
+  font-weight: 600;
+  color: #1565c0;
+  letter-spacing: 0.3px;
+}
+.lx-attr-value {
+  font-weight: 400;
+  opacity: 0.85;
+  letter-spacing: 0.2px;
+}
+
+/* Add optimizations with larger fonts and better readability for GIFs */
+.lx-gif-optimized .lx-text-window { font-size: 16px; line-height: 1.8; }
+.lx-gif-optimized .lx-attributes-panel { font-size: 15px; }
+.lx-gif-optimized .lx-current-highlight { text-decoration-thickness: 4px; }
+</style>
+    <div class="lx-animated-wrapper lx-gif-optimized">
+      <div class="lx-attributes-panel">
+        <div class="lx-legend">Highlights Legend: <span class="lx-label" style="background-color:#D2E3FC;">Relationship</span></div>
+        <div id="attributesContainer"></div>
+      </div>
+      <div class="lx-text-window" id="textWindow">
+        &quot;
+<span class="lx-highlight lx-current-highlight" data-idx="0" style="background-color:#D2E3FC;">Large language models interact with users through a simulated</span> “Assistant” persona. While the <span class="lx-highlight" data-idx="1" style="background-color:#D2E3FC;">Assistant is typically trained to be helpful, harmless, and honest</span>,
+it sometimes deviates from these ideals. In this paper, we identify directions in the model’s activation space—<span class="lx-highlight" data-idx="2" style="background-color:#D2E3FC;"><span class="lx-highlight" data-idx="3" style="background-color:#D2E3FC;">persona vectors</span>—underlying several traits, such as
+evil, sycophancy, and propensity to hallucinate. We confirm that these vectors can be used to monitor fluctuations in the Assistant’s personality</span> at deployment time.
+We then apply persona vectors to predict and control <span class="lx-highlight" data-idx="4" style="background-color:#D2E3FC;">personality shifts</span> that occur during training. We find that both intended and unintended <span class="lx-highlight" data-idx="5" style="background-color:#D2E3FC;">personality changes
+after finetuning are</span> strongly correlated with shifts along the relevant persona vectors. These shifts can be mitigated through post-hoc intervention, or avoided in
+the first place with a new preventative steering method. Moreover, <span class="lx-highlight" data-idx="6" style="background-color:#D2E3FC;">persona vectors can be used to flag training data</span> that will produce undesirable personality
+changes, both at the dataset level and the individual sample level. Our <span class="lx-highlight" data-idx="7" style="background-color:#D2E3FC;">method for extracting persona vectors is automated</span> and can be applied to any personality trait
+of interest, given only a natural-language description
+
+      </div>
+      <div class="lx-controls">
+        <div class="lx-button-row">
+          <button class="lx-control-btn" onclick="playPause()">▶️ Play</button>
+          <button class="lx-control-btn" onclick="prevExtraction()">⏮ Previous</button>
+          <button class="lx-control-btn" onclick="nextExtraction()">⏭ Next</button>
+        </div>
+        <div class="lx-progress-container">
+          <input type="range" id="progressSlider" class="lx-progress-slider" 
+                 min="0" max="7" value="0" 
+                 onchange="jumpToExtraction(this.value)">
+        </div>
+        <div class="lx-status-text">
+          Entity <span id="entityInfo">1/8</span> | 
+          Pos <span id="posInfo">[2-63]</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function() {
+        const extractions = [{"index": 0, "class": "Relationship", "text": "Large language models interact with users through a simulated \"Assistant\" persona", "color": "#D2E3FC", "startPos": 2, "endPos": 63, "beforeText": "&quot;\n", "extractionText": "Large language models interact with users through a simulated", "afterText": " \u201cAssistant\u201d persona. While the Assistant is typically trained to be helpful, harmless, and honest,\nit sometimes deviates from these ideals. In this p", "attributesHtml": "<div><strong>class:</strong> Relationship</div><div><strong>attributes:</strong> {<span class=\"lx-attr-key\">description</span>: <span class=\"lx-attr-value\">Language models create an interactive persona designed to engage with users</span>}</div>"}, {"index": 1, "class": "Relationship", "text": "Assistant is typically trained to be helpful, harmless, and honest", "color": "#D2E3FC", "startPos": 95, "endPos": 161, "beforeText": "&quot;\nLarge language models interact with users through a simulated \u201cAssistant\u201d persona. While the ", "extractionText": "Assistant is typically trained to be helpful, harmless, and honest", "afterText": ",\nit sometimes deviates from these ideals. In this paper, we identify directions in the model\u2019s activation space\u2014persona vectors\u2014underlying several tr", "attributesHtml": "<div><strong>class:</strong> Relationship</div><div><strong>attributes:</strong> {<span class=\"lx-attr-key\">description</span>: <span class=\"lx-attr-value\">The AI model has core ethical training principles guiding its interactions</span>}</div>"}, {"index": 2, "class": "Relationship", "text": "persona vectors can be used to monitor fluctuations in the Assistant's personality", "color": "#D2E3FC", "startPos": 274, "endPos": 470, "beforeText": "d to be helpful, harmless, and honest,\nit sometimes deviates from these ideals. In this paper, we identify directions in the model\u2019s activation space\u2014", "extractionText": "persona vectors\u2014underlying several traits, such as\nevil, sycophancy, and propensity to hallucinate. We confirm that these vectors can be used to monitor fluctuations in the Assistant\u2019s personality", "afterText": " at deployment time.\nWe then apply persona vectors to predict and control personality shifts that occur during training. We find that both intended an", "attributesHtml": "<div><strong>class:</strong> Relationship</div><div><strong>attributes:</strong> {<span class=\"lx-attr-key\">description</span>: <span class=\"lx-attr-value\">Tracking method to detect personality changes in AI models during deployment</span>}</div>"}, {"index": 3, "class": "Relationship", "text": "persona vectors underlying several traits", "color": "#D2E3FC", "startPos": 274, "endPos": 289, "beforeText": "d to be helpful, harmless, and honest,\nit sometimes deviates from these ideals. In this paper, we identify directions in the model\u2019s activation space\u2014", "extractionText": "persona vectors", "afterText": "\u2014underlying several traits, such as\nevil, sycophancy, and propensity to hallucinate. We confirm that these vectors can be used to monitor fluctuations", "attributesHtml": "<div><strong>class:</strong> Relationship</div><div><strong>attributes:</strong> {<span class=\"lx-attr-key\">description</span>: <span class=\"lx-attr-value\">Computational vectors that represent different personality characteristics like evil, sycophancy, and hallucination tendencies</span>}</div>"}, {"index": 4, "class": "Relationship", "text": "Personality shifts correlated with persona vector movements", "color": "#D2E3FC", "startPos": 544, "endPos": 562, "beforeText": "e vectors can be used to monitor fluctuations in the Assistant\u2019s personality at deployment time.\nWe then apply persona vectors to predict and control ", "extractionText": "personality shifts", "afterText": " that occur during training. We find that both intended and unintended personality changes\nafter finetuning are strongly correlated with shifts along ", "attributesHtml": "<div><strong>class:</strong> Relationship</div><div><strong>attributes:</strong> {<span class=\"lx-attr-key\">description</span>: <span class=\"lx-attr-value\">Changes in model behavior can be mapped and predicted through vector analysis</span>}</div>"}, {"index": 5, "class": "Relationship", "text": "personality changes after finetuning are correlated with shifts along persona vectors", "color": "#D2E3FC", "startPos": 633, "endPos": 673, "beforeText": "t time.\nWe then apply persona vectors to predict and control personality shifts that occur during training. We find that both intended and unintended ", "extractionText": "personality changes\nafter finetuning are", "afterText": " strongly correlated with shifts along the relevant persona vectors. These shifts can be mitigated through post-hoc intervention, or avoided in\nthe fi", "attributesHtml": "<div><strong>class:</strong> Relationship</div><div><strong>attributes:</strong> {<span class=\"lx-attr-key\">description</span>: <span class=\"lx-attr-value\">Model personality modifications can be mapped and predicted using computational vectors</span>}</div>"}, {"index": 6, "class": "Relationship", "text": "persona vectors can be used to flag training data", "color": "#D2E3FC", "startPos": 884, "endPos": 933, "beforeText": "ectors. These shifts can be mitigated through post-hoc intervention, or avoided in\nthe first place with a new preventative steering method. Moreover, ", "extractionText": "persona vectors can be used to flag training data", "afterText": " that will produce undesirable personality\nchanges, both at the dataset level and the individual sample level. Our method for extracting persona vecto", "attributesHtml": "<div><strong>class:</strong> Relationship</div><div><strong>attributes:</strong> {<span class=\"lx-attr-key\">description</span>: <span class=\"lx-attr-value\">A method for identifying and preventing undesirable personality changes in AI models during training</span>}</div>"}, {"index": 7, "class": "Relationship", "text": "method for extracting persona vectors is automated", "color": "#D2E3FC", "startPos": 1048, "endPos": 1098, "beforeText": "s can be used to flag training data that will produce undesirable personality\nchanges, both at the dataset level and the individual sample level. Our ", "extractionText": "method for extracting persona vectors is automated", "afterText": " and can be applied to any personality trait\nof interest, given only a natural-language description\n", "attributesHtml": "<div><strong>class:</strong> Relationship</div><div><strong>attributes:</strong> {<span class=\"lx-attr-key\">description</span>: <span class=\"lx-attr-value\">An automated technique for analyzing personality traits based on natural language descriptions</span>}</div>"}];
+        let currentIndex = 0;
+        let isPlaying = false;
+        let animationInterval = null;
+        let animationSpeed = 1.0;
+
+        function updateDisplay() {
+          const extraction = extractions[currentIndex];
+          if (!extraction) return;
+
+          document.getElementById('attributesContainer').innerHTML = extraction.attributesHtml;
+          document.getElementById('entityInfo').textContent = (currentIndex + 1) + '/' + extractions.length;
+          document.getElementById('posInfo').textContent = '[' + extraction.startPos + '-' + extraction.endPos + ']';
+          document.getElementById('progressSlider').value = currentIndex;
+
+          const playBtn = document.querySelector('.lx-control-btn');
+          if (playBtn) playBtn.textContent = isPlaying ? '⏸ Pause' : '▶️ Play';
+
+          const prevHighlight = document.querySelector('.lx-text-window .lx-current-highlight');
+          if (prevHighlight) prevHighlight.classList.remove('lx-current-highlight');
+          const currentSpan = document.querySelector('.lx-text-window span[data-idx="' + currentIndex + '"]');
+          if (currentSpan) {
+            currentSpan.classList.add('lx-current-highlight');
+            currentSpan.scrollIntoView({block: 'center', behavior: 'smooth'});
+          }
+        }
+
+        function nextExtraction() {
+          currentIndex = (currentIndex + 1) % extractions.length;
+          updateDisplay();
+        }
+
+        function prevExtraction() {
+          currentIndex = (currentIndex - 1 + extractions.length) % extractions.length;
+          updateDisplay();
+        }
+
+        function jumpToExtraction(index) {
+          currentIndex = parseInt(index);
+          updateDisplay();
+        }
+
+        function playPause() {
+          if (isPlaying) {
+            clearInterval(animationInterval);
+            isPlaying = false;
+          } else {
+            animationInterval = setInterval(nextExtraction, animationSpeed * 1000);
+            isPlaying = true;
+          }
+          updateDisplay();
+        }
+
+        window.playPause = playPause;
+        window.nextExtraction = nextExtraction;
+        window.prevExtraction = prevExtraction;
+        window.jumpToExtraction = jumpToExtraction;
+
+        updateDisplay();
+      })();
+    </script>
