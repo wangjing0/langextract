@@ -92,7 +92,7 @@ def save_annotated_documents(
   Args:
     annotated_documents: Iterator over AnnotatedDocument objects to save.
     output_dir: The directory to which the JSONL file should be written.
-      Defaults to 'test_output/' if None.
+      Defaults to 'output/' if None.
     output_name: File name for the JSONL file.
     show_progress: Whether to show a progress bar during saving.
 
@@ -101,7 +101,7 @@ def save_annotated_documents(
     InvalidDatasetError: If no documents are produced.
   """
   if output_dir is None:
-    output_dir = pathlib.Path('test_output')
+    output_dir = pathlib.Path('output')
 
   output_dir.mkdir(parents=True, exist_ok=True)
 

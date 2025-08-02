@@ -47,6 +47,6 @@ result = lx.extract(
 
 lx.io.save_annotated_documents([result], output_name="extraction_results_romeo_juliet.jsonl")
 
-html_content = lx.visualize("test_output/extraction_results_romeo_juliet.jsonl")
-with open("test_output/visualization_romeo_juliet.html", "w") as f:
+html_content = lx.visualize("output/extraction_results_romeo_juliet.jsonl")
+with open("output/visualization_romeo_juliet.html", "w") as f:
     f.write(html_content)
