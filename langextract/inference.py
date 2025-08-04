@@ -571,6 +571,7 @@ class OpenAILanguageModel(BaseLanguageModel):
   model_id: str = 'gpt-4o-mini'
   api_key: str | None = None
   organization: str | None = None
+  structured_schema: schema.StructuredSchema | None = None
   format_type: data.FormatType = data.FormatType.JSON
   temperature: float = 0.0
   max_workers: int = 10
@@ -586,6 +587,7 @@ class OpenAILanguageModel(BaseLanguageModel):
       model_id: str = 'gpt-4o-mini',
       api_key: str | None = None,
       organization: str | None = None,
+      structured_schema: schema.StructuredSchema | None = None,
       format_type: data.FormatType = data.FormatType.JSON,
       temperature: float = 0.0,
       max_workers: int = 10,
@@ -597,6 +599,7 @@ class OpenAILanguageModel(BaseLanguageModel):
       model_id: The OpenAI model ID to use (e.g., 'gpt-4o-mini', 'gpt-4o').
       api_key: API key for OpenAI service.
       organization: Optional OpenAI organization ID.
+      structured_schema: Optional StructuredSchema for structured output.
       format_type: Output format (JSON or YAML).
       temperature: Sampling temperature.
       max_workers: Maximum number of parallel API calls.
@@ -606,6 +609,7 @@ class OpenAILanguageModel(BaseLanguageModel):
     self.model_id = model_id
     self.api_key = api_key
     self.organization = organization
+    self.structured_schema = structured_schema
     self.format_type = format_type
     self.temperature = temperature
     self.max_workers = max_workers
@@ -626,29 +630,36 @@ class OpenAILanguageModel(BaseLanguageModel):
   def _process_single_prompt(self, prompt: str, config: dict) -> ScoredOutput:
     """Process a single prompt and return a ScoredOutput."""
     try:
-      # Prepare the system message for structured output
-      system_message = ''
-      if self.format_type == data.FormatType.JSON:
-        system_message = (
-            'You are a helpful assistant that responds in JSON format.'
-        )
-      elif self.format_type == data.FormatType.YAML:
-        system_message = (
-            'You are a helpful assistant that responds in YAML format.'
-        )
+      # Build API call parameters
+      api_params = {
+          'model': self.model_id,
+          'max_tokens': config.get('max_output_tokens', 1024),
+          'temperature': config.get('temperature', self.temperature),
+          'messages': [{'role': 'user', 'content': prompt}]
+      }
+      
+      # Add optional parameters
+      if 'top_p' in config:
+        api_params['top_p'] = config['top_p']
 
+      # Handle structured output with JSON schema
+      if self.structured_schema:
+        api_params['response_format'] = {
+            'type': 'json_schema',
+            'json_schema': {
+                'name': 'structured_output',
+                'schema': self.structured_schema.openai_schema
+            }
+        }
+      elif self.format_type == data.FormatType.JSON:
+        api_params['response_format'] = {'type': 'json_object'}
+        # Add JSON format instruction to prompt
+        if 'respond in valid JSON format' not in prompt.lower():
+          prompt = prompt + '\n\nPlease respond in valid JSON format.'
+          api_params['messages'][0]['content'] = prompt
+      
       # Create the chat completion using the v1.x client API
-      response = self._client.chat.completions.create(
-          model=self.model_id,
-          messages=[
-              {'role': 'system', 'content': system_message},
-              {'role': 'user', 'content': prompt},
-          ],
-          temperature=config.get('temperature', self.temperature),
-          max_tokens=config.get('max_output_tokens'),
-          top_p=config.get('top_p'),
-          n=1,
-      )
+      response = self._client.chat.completions.create(**api_params)
 
       # Extract the response text using the v1.x response format
       output_text = response.choices[0].message.content

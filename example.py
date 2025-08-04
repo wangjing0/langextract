@@ -57,79 +57,46 @@ Langfun is a PyGlove powered library that aims to make language models (LM) fun 
 To unlock the magic of Langfun, you can start with Langfun 101. Notably, Langfun is compatible with popular LLMs such as Gemini, GPT, Claude, all without the need for additional fine-tuning.
 """
 
-# Process Romeo & Juliet directly from Project Gutenberg
-result = lx.extract(
-    text_or_documents= input_text,
-    prompt_description=prompt,
-    examples=examples,
-    model_id="claude-3-5-haiku-latest",
-    language_model_type=inference.ClaudeLanguageModel,
-    extraction_passes=3,    # Improves recall through multiple passes
-    max_workers=10,         # Parallel processing for speed
-    max_char_buffer=1000    # Smaller contexts for better accuracy
-)
+def main(provider='google'):
+    if provider == 'google':
+        model_id = "gemini-2.5-flash"
+        language_model_type = inference.GeminiLanguageModel
+    elif provider == 'openai':
+        model_id = "gpt-4o-mini"
+        language_model_type = inference.OpenAILanguageModel
+    elif provider == 'anthropic':
+        model_id = "claude-3-5-haiku-latest"
+        language_model_type = inference.ClaudeLanguageModel
+    else:
+        raise ValueError(f"Invalid provider: {provider}")
 
-lx.io.save_annotated_documents([result], output_name="claude_extraction_results.jsonl")
+    # Process Romeo & Juliet directly from Project Gutenberg
+    result = lx.extract(
+        text_or_documents= input_text,
+        prompt_description=prompt,
+        examples=examples,
+        model_id=model_id,
+        language_model_type=language_model_type,
+        extraction_passes=3,    # Improves recall through multiple passes
+        max_workers=10,         # Parallel processing for speed
+        max_char_buffer=1000    # Smaller contexts for better accuracy
+    )
 
-html_content = lx.visualize("output/claude_extraction_results.jsonl")
+    lx.io.save_annotated_documents([result], output_name=f"{provider}_extraction_results.jsonl")
 
-# Convert HTML object to string if needed
-if hasattr(html_content, 'data'):
-    # HTML object from IPython.display
-    html_string = html_content.data
-else:
-    # Already a string
-    html_string = html_content
+    html_content = lx.visualize(f"output/{provider}_extraction_results.jsonl")
 
-with open("output/claude_extraction_results_visualization.html", "w") as f:
-    f.write(html_string)
+    # Convert HTML object to string if needed
+    if hasattr(html_content, 'data'):
+        # HTML object from IPython.display
+        html_string = html_content.data
+    else:
+        # Already a string
+        html_string = html_content
 
-
-
-result = lx.extract(
-    text_or_documents= input_text,
-    prompt_description=prompt,
-    examples=examples,
-    model_id="gpt-4o-mini",
-    language_model_type=inference.OpenAILanguageModel,
-    extraction_passes=3,    # Improves recall through multiple passes
-    max_workers=10,         # Parallel processing for speed
-    max_char_buffer=1000    # Smaller contexts for better accuracy
-)
-lx.io.save_annotated_documents([result], output_name="gpt_extraction_results.jsonl")
-
-html_content = lx.visualize("output/gpt_extraction_results.jsonl")
-
-# Convert HTML object to string if needed
-if hasattr(html_content, 'data'):
-    html_string = html_content.data
-else:
-    html_string = html_content
-
-with open("output/gpt_extraction_results_visualization.html", "w") as f:
-    f.write(html_string)
+    with open(f"output/{provider}_extraction_results_visualization.html", "w") as f:
+        f.write(html_string)
 
 
-
-result = lx.extract(
-    text_or_documents= input_text,
-    prompt_description=prompt,
-    examples=examples,
-    model_id="gemini-2.5-flash",
-    language_model_type=inference.GeminiLanguageModel,
-    extraction_passes=3,    # Improves recall through multiple passes
-    max_workers=10,         # Parallel processing for speed
-    max_char_buffer=1000    # Smaller contexts for better accuracy
-)
-lx.io.save_annotated_documents([result], output_name="gemini_extraction_results.jsonl")
-
-html_content = lx.visualize("output/gemini_extraction_results.jsonl")
-
-# Convert HTML object to string if needed
-if hasattr(html_content, 'data'):
-    html_string = html_content.data
-else:
-    html_string = html_content
-
-with open("output/gemini_extraction_results_visualization.html", "w") as f:
-    f.write(html_string)
+if __name__ == "__main__":
+    main(provider='openai')
