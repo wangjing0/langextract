@@ -60,15 +60,24 @@ class BaseSchema(abc.ABC):
     """Factory method to build a schema instance from example data."""
 
 
-@dataclasses.dataclass
-class ClaudeSchema(BaseSchema):
-  """Schema implementation for Claude structured output.
+@dataclasses.dataclass(init=False)
+class StructuredSchema(BaseSchema):
+  """Universal schema implementation for structured output across LLM providers.
 
-  Converts ExampleData objects into an OpenAPI/JSON-schema definition
-  that Claude can interpret via structured output.
+  Converts ExampleData objects into a JSON schema definition that works with
+  both OpenAI's GPT models (via response_format) and Anthropic's Claude models
+  (via structured output instructions).
   """
 
   _schema_dict: dict
+
+  def __init__(self, _schema_dict: dict) -> None:
+    """Initialize the StructuredSchema.
+    
+    Args:
+      _schema_dict: The JSON schema dictionary.
+    """
+    self._schema_dict = _schema_dict
 
   @property
   def schema_dict(self) -> dict:
@@ -80,17 +89,34 @@ class ClaudeSchema(BaseSchema):
     """Sets the schema dictionary."""
     self._schema_dict = schema_dict
 
+  @property
+  def openai_schema(self) -> dict:
+    """Returns the schema in OpenAI JSON Schema format."""
+    return self._schema_dict
+
+  @property
+  def claude_schema(self) -> dict:
+    """Returns the schema in Claude format (same as base schema)."""
+    return self._schema_dict
+  
+  @property
+  def gemini_schema(self) -> dict:
+    """Returns the schema in Gemini format (same as base schema)."""
+    return self._schema_dict
+
   @classmethod
   def from_examples(
       cls,
       examples_data: Sequence[data.ExampleData],
       attribute_suffix: str = "_attributes",
-  ) -> ClaudeSchema:
-    """Creates a ClaudeSchema from example extractions.
+  ) -> StructuredSchema:
+    """Creates a StructuredSchema from example extractions.
 
     Builds a JSON-based schema with a top-level "extractions" array. Each
     element in that array is an object containing the extraction class name
     and an accompanying "<class>_attributes" object for its attributes.
+
+    This schema format is compatible with both OpenAI and Anthropic APIs.
 
     Args:
       examples_data: A sequence of ExampleData objects containing extraction
@@ -99,7 +125,7 @@ class ClaudeSchema(BaseSchema):
         attributes field name (defaults to "_attributes").
 
     Returns:
-      A ClaudeSchema with internal dictionary represents the JSON constraint.
+      A StructuredSchema with internal dictionary that represents the JSON constraint.
     """
     # Track attribute types for each category
     extraction_categories: dict[str, dict[str, set[type]]] = {}
@@ -137,6 +163,7 @@ class ClaudeSchema(BaseSchema):
           else:
             attr_properties[attr_name] = {"type": "string"}
 
+      # Use "nullable": true for backward compatibility with tests
       extraction_properties[attributes_field] = {
           "type": "object",
           "properties": attr_properties,
@@ -157,3 +184,7 @@ class ClaudeSchema(BaseSchema):
     }
 
     return cls(_schema_dict=schema_dict)
+
+
+# Backward compatibility alias
+ClaudeSchema = StructuredSchema

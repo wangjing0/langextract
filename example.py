@@ -1,5 +1,6 @@
 import langextract as lx
 import textwrap
+from langextract import inference
 
 # 1. Define the prompt and extraction rules
 prompt = textwrap.dedent("""
@@ -62,14 +63,15 @@ result = lx.extract(
     prompt_description=prompt,
     examples=examples,
     model_id="claude-3-5-haiku-latest",
+    language_model_type=inference.ClaudeLanguageModel,
     extraction_passes=3,    # Improves recall through multiple passes
     max_workers=10,         # Parallel processing for speed
     max_char_buffer=1000    # Smaller contexts for better accuracy
 )
 
-lx.io.save_annotated_documents([result], output_name="extraction_results.jsonl")
+lx.io.save_annotated_documents([result], output_name="claude_extraction_results.jsonl")
 
-html_content = lx.visualize("output/extraction_results.jsonl")
+html_content = lx.visualize("output/claude_extraction_results.jsonl")
 
 # Convert HTML object to string if needed
 if hasattr(html_content, 'data'):
@@ -79,5 +81,55 @@ else:
     # Already a string
     html_string = html_content
 
-with open("output/extraction_results_visualization.html", "w") as f:
+with open("output/claude_extraction_results_visualization.html", "w") as f:
+    f.write(html_string)
+
+
+
+result = lx.extract(
+    text_or_documents= input_text,
+    prompt_description=prompt,
+    examples=examples,
+    model_id="gpt-4o-mini",
+    language_model_type=inference.OpenAILanguageModel,
+    extraction_passes=3,    # Improves recall through multiple passes
+    max_workers=10,         # Parallel processing for speed
+    max_char_buffer=1000    # Smaller contexts for better accuracy
+)
+lx.io.save_annotated_documents([result], output_name="gpt_extraction_results.jsonl")
+
+html_content = lx.visualize("output/gpt_extraction_results.jsonl")
+
+# Convert HTML object to string if needed
+if hasattr(html_content, 'data'):
+    html_string = html_content.data
+else:
+    html_string = html_content
+
+with open("output/gpt_extraction_results_visualization.html", "w") as f:
+    f.write(html_string)
+
+
+
+result = lx.extract(
+    text_or_documents= input_text,
+    prompt_description=prompt,
+    examples=examples,
+    model_id="gemini-2.5-flash",
+    language_model_type=inference.GeminiLanguageModel,
+    extraction_passes=3,    # Improves recall through multiple passes
+    max_workers=10,         # Parallel processing for speed
+    max_char_buffer=1000    # Smaller contexts for better accuracy
+)
+lx.io.save_annotated_documents([result], output_name="gemini_extraction_results.jsonl")
+
+html_content = lx.visualize("output/gemini_extraction_results.jsonl")
+
+# Convert HTML object to string if needed
+if hasattr(html_content, 'data'):
+    html_string = html_content.data
+else:
+    html_string = html_content
+
+with open("output/gemini_extraction_results_visualization.html", "w") as f:
     f.write(html_string)

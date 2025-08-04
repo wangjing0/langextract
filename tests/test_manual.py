@@ -59,8 +59,8 @@ def test_claude_language_model():
     # Test class exists
     assert hasattr(inference, 'ClaudeLanguageModel'), "ClaudeLanguageModel class missing"
     
-    # Test old class doesn't exist
-    assert not hasattr(inference, 'GeminiLanguageModel'), "GeminiLanguageModel still exists"
+    # Test GeminiLanguageModel now exists as a supported model
+    assert hasattr(inference, 'GeminiLanguageModel'), "GeminiLanguageModel class missing"
     
     # Test initialization
     model = inference.ClaudeLanguageModel(api_key='dummy_key')

@@ -77,8 +77,9 @@ def extract(
         of Document objects.
       prompt_description: Instructions for what to extract from the text.
       examples: List of ExampleData objects to guide the extraction.
-      api_key: API key for Claude or other LLM services (can also use
-        environment variable LANGEXTRACT_API_KEY). Cost considerations: Most
+      api_key: API key for the selected LLM service. Environment variables:
+        ANTHROPIC_API_KEY (Claude), OPENAI_API_KEY (OpenAI), GOOGLE_API_KEY 
+        (Gemini). Ollama models don't require an API key. Cost considerations: Most
         APIs charge by token volume. Smaller max_char_buffer values increase the
         number of API calls, while extraction_passes > 1 reprocesses tokens
         multiple times. Note that max_workers improves processing speed without
@@ -177,31 +178,62 @@ def extract(
   # TODO: Unify schema generation.
   if (
       use_schema_constraints
-      and language_model_type == inference.ClaudeLanguageModel
+      and language_model_type in (inference.ClaudeLanguageModel, inference.OpenAILanguageModel, inference.GeminiLanguageModel)
   ):
-    model_schema = schema.ClaudeSchema.from_examples(prompt_template.examples)
+    model_schema = schema.StructuredSchema.from_examples(prompt_template.examples)
 
   if not api_key:
-    api_key = os.environ.get("LANGEXTRACT_API_KEY")
+    # Load API key based on language model type
+    if language_model_type == inference.ClaudeLanguageModel:
+      api_key = os.environ.get("ANTHROPIC_API_KEY")
+    elif language_model_type == inference.OpenAILanguageModel:
+      api_key = os.environ.get("OPENAI_API_KEY")
+    elif language_model_type == inference.GeminiLanguageModel:
+      api_key = os.environ.get("GOOGLE_API_KEY")
 
-    # Currently only Claude is supported
-    if not api_key and language_model_type == inference.ClaudeLanguageModel:
+    # Check if API key is required for cloud-hosted models
+    cloud_models = (inference.ClaudeLanguageModel, inference.OpenAILanguageModel, inference.GeminiLanguageModel)
+    if not api_key and language_model_type in cloud_models:
+      if language_model_type == inference.ClaudeLanguageModel:
+        model_name, env_var = "Claude", "ANTHROPIC_API_KEY"
+      elif language_model_type == inference.OpenAILanguageModel:
+        model_name, env_var = "OpenAI", "OPENAI_API_KEY"
+      elif language_model_type == inference.GeminiLanguageModel:
+        model_name, env_var = "Gemini", "GOOGLE_API_KEY"
+      
       raise ValueError(
-          "API key must be provided for cloud-hosted models via the api_key"
-          " parameter or the LANGEXTRACT_API_KEY environment variable"
+          f"API key must be provided for {model_name} models via the api_key"
+          f" parameter or the {env_var} environment variable"
       )
 
+  # Build base kwargs - different models expect different parameter names
   base_lm_kwargs: dict[str, Any] = {
       "api_key": api_key,
-      "model_id": model_id,
-      "claude_schema": model_schema,
       "format_type": format_type,
       "temperature": temperature,
-      "seed": seed,
-      "model_url": model_url,
-      "constraint": schema_constraint,
       "max_workers": max_workers,
   }
+  
+  # Add model-specific parameters
+  if language_model_type == inference.OllamaLanguageModel:
+    base_lm_kwargs.update({
+        "model": model_id,  # OllamaLanguageModel uses 'model' instead of 'model_id'
+        "model_url": model_url,
+        "constraint": schema_constraint,
+    })
+    if seed is not None:
+      base_lm_kwargs["seed"] = seed
+  else:
+    # Claude, OpenAI, and Gemini models use 'model_id'
+    base_lm_kwargs["model_id"] = model_id
+    
+    # Add schema for models that support it
+    if language_model_type in (inference.ClaudeLanguageModel, inference.OpenAILanguageModel, inference.GeminiLanguageModel):
+      base_lm_kwargs["structured_schema"] = model_schema
+    
+    # Add seed for non-Ollama models
+    if seed is not None:
+      base_lm_kwargs["seed"] = seed
 
   # Merge user-provided params which have precedence over defaults.
   base_lm_kwargs.update(language_model_params or {})
