@@ -62,7 +62,7 @@ def main(provider='google'):
         model_id = "gemini-2.5-flash"
         language_model_type = inference.GeminiLanguageModel
     elif provider == 'openai':
-        model_id = "gpt-4o-mini"
+        model_id = 'gpt-4.1'# "gpt-4o-mini"
         language_model_type = inference.OpenAILanguageModel
     elif provider == 'anthropic':
         model_id = "claude-3-5-haiku-latest"
