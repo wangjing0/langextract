@@ -264,14 +264,6 @@ API costs vary by provider and model. Key factors affecting cost:
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
 ## License
 
-Licensed under the MIT License. See [LICENSE](LICENSE) for details.
-
 ## Support
-
-- **Documentation**: [Link to docs when available]
-- **Issues**: Report bugs and feature requests via GitHub Issues
-- **Examples**: Check the `examples/` directory for more use cases
