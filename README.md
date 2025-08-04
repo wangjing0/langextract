@@ -19,16 +19,17 @@ The library enables developers to transform raw text into structured data throug
 
 ## Installation
 
-Install LangExtract using pip:
 
 ```bash
-pip install langextract
+git clone git@gitlab.com:accreteai-main/ai-research/relation-extraction-research/langextract.git
+cd langextract
+pip install -e .
 ```
 
 Or using uv (recommended for faster dependency resolution):
 
 ```bash
-uv add langextract
+uv init && uv sync
 ```
 
 ### Dependencies
