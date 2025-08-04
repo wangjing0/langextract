@@ -1002,7 +1002,7 @@ requires-dist = [
     { name = "ml-collections", specifier = ">=0.1.0" },
     { name = "more-itertools", specifier = ">=8.0.0" },
     { name = "numpy", specifier = ">=1.20.0" },
-    { name = "openai", specifier = ">=0.27.0" },
+    { name = "openai", specifier = ">=1.98.0" },
     { name = "pandas", specifier = ">=1.3.0" },
     { name = "pydantic", specifier = ">=1.8.0" },
     { name = "pylint", marker = "extra == 'dev'", specifier = ">=2.17.5" },
@@ -1550,16 +1550,21 @@ wheels = [
 
 [[package]]
 name = "openai"
-version = "0.27.2"
+version = "1.98.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "aiohttp" },
-    { name = "requests" },
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "httpx" },
+    { name = "jiter" },
+    { name = "pydantic" },
+    { name = "sniffio" },
     { name = "tqdm" },
+    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a9/94/3d4755c8126eeb4b3469d8b9aff5600085f6d7de691da1ac04c79c24dc48/openai-0.27.2.tar.gz", hash = "sha256:5869fdfa34b0ec66c39afa22f4a0fb83a135dff81f6505f52834c6ab3113f762", size = 57122, upload-time = "2023-03-11T03:51:39.553Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/9d/52eadb15c92802711d6b6cf00df3a6d0d18b588f4c5ba5ff210c6419fc03/openai-1.98.0.tar.gz", hash = "sha256:3ee0fcc50ae95267fd22bd1ad095ba5402098f3df2162592e68109999f685427", size = 496695, upload-time = "2025-07-30T12:48:03.701Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/47/21/d909d8e92d1867f3daeb8d5c40936e3d37e27ad1ae187c754fefeadcbd4f/openai-0.27.2-py3-none-any.whl", hash = "sha256:6df674cf257e9e0504f1fd191c333d3f6a2442b13218d0eccf06230eb24d320e", size = 70094, upload-time = "2023-03-11T03:51:37.378Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/fe/f64631075b3d63a613c0d8ab761d5941631a470f6fa87eaaee1aa2b4ec0c/openai-1.98.0-py3-none-any.whl", hash = "sha256:b99b794ef92196829120e2df37647722104772d2a74d08305df9ced5f26eae34", size = 767713, upload-time = "2025-07-30T12:48:01.264Z" },
 ]
 
 [[package]]

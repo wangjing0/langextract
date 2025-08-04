@@ -24,6 +24,7 @@ import textwrap
 from typing import Any
 
 import anthropic
+import openai
 import requests
 from typing_extensions import override
 import yaml
@@ -405,6 +406,173 @@ class ClaudeLanguageModel(BaseLanguageModel):
 
   def parse_output(self, output: str) -> Any:
     """Parses Claude output as JSON or YAML."""
+    try:
+      if self.format_type == data.FormatType.JSON:
+        return json.loads(output)
+      else:
+        return yaml.safe_load(output)
+    except Exception as e:
+      raise ValueError(
+          f'Failed to parse output as {self.format_type.name}: {str(e)}'
+      ) from e
+
+
+@dataclasses.dataclass(init=False)
+class GPTLanguageModel(BaseLanguageModel):
+  """Language model inference using OpenAI's GPT API with structured output."""
+
+  model_id: str = 'gpt-4o-mini'
+  api_key: str | None = None
+  openai_schema: dict[str, Any] | None = None
+  format_type: data.FormatType = data.FormatType.JSON
+  temperature: float = 0.0
+  seed: int | None = None
+  max_workers: int = 10
+  _extra_kwargs: dict[str, Any] = dataclasses.field(
+      default_factory=dict, repr=False, compare=False
+  )
+
+  def __init__(
+      self,
+      model_id: str = 'gpt-4o-mini',
+      api_key: str | None = None,
+      openai_schema: dict[str, Any] | None = None,
+      format_type: data.FormatType = data.FormatType.JSON,
+      temperature: float = 0.0,
+      seed: int | None = None,
+      max_workers: int = 10,
+      **kwargs,
+  ) -> None:
+    """Initialize the GPT language model.
+
+    Args:
+      model_id: The GPT model ID to use.
+      api_key: API key for OpenAI service.
+      openai_schema: Optional JSON schema for structured output.
+      format_type: Output format (JSON or YAML).
+      temperature: Sampling temperature.
+      seed: Random seed for deterministic generation.
+      max_workers: Maximum number of parallel API calls.
+      **kwargs: Ignored extra parameters so callers can pass a superset of
+        arguments shared across back-ends without raising ``TypeError``.
+    """
+    self.model_id = model_id
+    self.api_key = api_key
+    self.openai_schema = openai_schema
+    self.format_type = format_type
+    self.temperature = temperature
+    self.seed = seed
+    self.max_workers = max_workers
+    self._extra_kwargs = kwargs or {}
+
+    if not self.api_key:
+      raise ValueError('API key not provided.')
+
+    self._client = openai.OpenAI(api_key=self.api_key)
+
+    super().__init__(
+        constraint=schema.Constraint(constraint_type=schema.ConstraintType.NONE)
+    )
+
+  def _process_single_prompt(self, prompt: str, config: dict) -> ScoredOutput:
+    """Process a single prompt and return a ScoredOutput."""
+    try:
+      # Build API call parameters
+      api_params = {
+          'model': self.model_id,
+          'max_tokens': config.get('max_output_tokens', 1024),
+          'temperature': config.get('temperature', self.temperature),
+          'messages': [{'role': 'user', 'content': prompt}]
+      }
+      
+      # Add seed if provided
+      seed_value = config.get('seed', self.seed)
+      if seed_value is not None:
+        api_params['seed'] = seed_value
+
+      # Add other optional parameters
+      if 'top_p' in config:
+        api_params['top_p'] = config['top_p']
+
+      # Handle structured output with JSON schema
+      if self.openai_schema:
+        api_params['response_format'] = {
+            'type': 'json_schema',
+            'json_schema': {
+                'name': 'structured_output',
+                'schema': self.openai_schema
+            }
+        }
+      elif self.format_type == data.FormatType.JSON:
+        api_params['response_format'] = {'type': 'json_object'}
+        # Add JSON format instruction to prompt
+        if 'respond in valid JSON format' not in prompt.lower():
+          prompt = prompt + '\n\nPlease respond in valid JSON format.'
+          api_params['messages'][0]['content'] = prompt
+      
+      response = self._client.chat.completions.create(**api_params)
+
+      return ScoredOutput(score=1.0, output=response.choices[0].message.content)
+
+    except Exception as e:
+      raise InferenceOutputError(f'OpenAI API error: {str(e)}') from e
+
+  def infer(
+      self, batch_prompts: Sequence[str], **kwargs
+  ) -> Iterator[Sequence[ScoredOutput]]:
+    """Runs inference on a list of prompts via OpenAI's API.
+
+    Args:
+      batch_prompts: A list of string prompts.
+      **kwargs: Additional generation params (temperature, top_p, seed, etc.)
+
+    Yields:
+      Lists of ScoredOutputs.
+    """
+    config = {
+        'temperature': kwargs.get('temperature', self.temperature),
+    }
+    if 'max_output_tokens' in kwargs:
+      config['max_output_tokens'] = kwargs['max_output_tokens']
+    if 'seed' in kwargs:
+      config['seed'] = kwargs['seed']
+    if 'top_p' in kwargs:
+      config['top_p'] = kwargs['top_p']
+
+    # Use parallel processing for batches larger than 1
+    if len(batch_prompts) > 1 and self.max_workers > 1:
+      with concurrent.futures.ThreadPoolExecutor(
+          max_workers=min(self.max_workers, len(batch_prompts))
+      ) as executor:
+        future_to_index = {
+            executor.submit(
+                self._process_single_prompt, prompt, config.copy()
+            ): i
+            for i, prompt in enumerate(batch_prompts)
+        }
+
+        results: list[ScoredOutput | None] = [None] * len(batch_prompts)
+        for future in concurrent.futures.as_completed(future_to_index):
+          index = future_to_index[future]
+          try:
+            results[index] = future.result()
+          except Exception as e:
+            raise InferenceOutputError(
+                f'Parallel inference error: {str(e)}'
+            ) from e
+
+        for result in results:
+          if result is None:
+            raise InferenceOutputError('Failed to process one or more prompts')
+          yield [result]
+    else:
+      # Sequential processing for single prompt or worker
+      for prompt in batch_prompts:
+        result = self._process_single_prompt(prompt, config.copy())
+        yield [result]
+
+  def parse_output(self, output: str) -> Any:
+    """Parses GPT output as JSON or YAML."""
     try:
       if self.format_type == data.FormatType.JSON:
         return json.loads(output)
