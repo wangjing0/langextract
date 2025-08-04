@@ -20,7 +20,6 @@ dependencies = [
     "exceptiongroup>=1.1.0",
     "google-genai>=0.1.0",
     "ipykernel>=6.30.0",
-    "langfun>=0.1.1",
     "libmagic>=1.0",
     "ml-collections>=0.1.0",
     "more-itertools>=8.0.0",

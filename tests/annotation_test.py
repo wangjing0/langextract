@@ -34,7 +34,7 @@ class AnnotatorTest(absltest.TestCase):
   def setUp(self):
     super().setUp()
     self.mock_language_model = self.enter_context(
-        mock.patch.object(inference, "LangFunLanguageModel", autospec=True)
+        mock.patch.object(inference, "ClaudeLanguageModel", autospec=True)
     )
     self.annotator = annotation.Annotator(
         language_model=self.mock_language_model,
@@ -687,7 +687,7 @@ class AnnotatorMultipleDocumentTest(parameterized.TestCase):
       batch_length: int = 1,
   ):
     mock_language_model = self.enter_context(
-        mock.patch.object(inference, "LangFunLanguageModel", autospec=True)
+        mock.patch.object(inference, "ClaudeLanguageModel", autospec=True)
     )
 
     # Define a side effect function so return length based on batch length.
@@ -760,7 +760,7 @@ class AnnotatorMultipleDocumentTest(parameterized.TestCase):
       batch_length: int = 1,
   ):
     mock_language_model = self.enter_context(
-        mock.patch.object(inference, "LangFunLanguageModel", autospec=True)
+        mock.patch.object(inference, "ClaudeLanguageModel", autospec=True)
     )
     mock_language_model.infer.return_value = [
         [
@@ -797,7 +797,7 @@ class AnnotatorMultiPassTest(absltest.TestCase):
   def setUp(self):
     super().setUp()
     self.mock_language_model = self.enter_context(
-        mock.patch.object(inference, "LangFunLanguageModel", autospec=True)
+        mock.patch.object(inference, "ClaudeLanguageModel", autospec=True)
     )
     self.annotator = annotation.Annotator(
         language_model=self.mock_language_model,
