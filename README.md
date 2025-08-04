@@ -2,7 +2,7 @@
 
 ## Introduction
 
-LangExtract is an extension of Google's LangExtract package that provides a powerful and unified interface for extracting structured information from unstructured text using Large Language Models (LLMs). Built with enterprise-grade scalability and reliability in mind, it seamlessly integrates with all major LLM providers including OpenAI, Anthropic, Google, and local models via Ollama.
+LangExtract is an extension of Google's LangExtract package that provides a powerful and unified interface for extracting structured information from unstructured text using Large Language Models (LLMs). Built with enterprise-grade scalability and reliability in mind, it seamlessly integrates with all major LLM providers including OpenAI, Anthropic, Google, or local models via Ollama.
 
 The library enables developers to transform raw text into structured data through natural language instructions and example-driven guidance, making it ideal for information extraction, entity recognition, relationship mapping, and content analysis tasks across various domains.
 
@@ -40,7 +40,6 @@ LangExtract requires Python 3.8+ and installs the following key dependencies:
 - `anthropic` - Anthropic Claude API client  
 - `openai` - OpenAI GPT API client
 - `requests` - HTTP client for Ollama and URL downloads
-- `python-dotenv` - Environment variable management
 - `pydantic` - Data validation and serialization
 
 ## Language Model Classes
