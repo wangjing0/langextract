@@ -620,7 +620,8 @@ class OpenAILanguageModel(BaseLanguageModel):
 
     # Initialize the OpenAI client
     self._client = openai.OpenAI(
-        api_key=self.api_key, organization=self.organization
+        api_key=self.api_key, 
+        organization=self.organization
     )
 
     super().__init__(
@@ -723,6 +724,184 @@ class OpenAILanguageModel(BaseLanguageModel):
 
   def parse_output(self, output: str) -> Any:
     """Parses OpenAI output as JSON or YAML.
+
+    Note: This expects raw JSON/YAML without code fences.
+    Code fence extraction is handled by resolver.py.
+    """
+    try:
+      if self.format_type == data.FormatType.JSON:
+        return json.loads(output)
+      else:
+        return yaml.safe_load(output)
+    except Exception as e:
+      raise ValueError(
+          f'Failed to parse output as {self.format_type.name}: {str(e)}'
+      ) from e
+  
+
+@dataclasses.dataclass(init=False)
+class HFLanguageModel(BaseLanguageModel):
+  """Language model inference using HuggingFace's OpenAI-compatible API."""
+
+  model_id: str = 'openai/gpt-oss-120b:cerebras'
+  api_key: str | None = None
+  base_url: str = 'https://router.huggingface.co/v1'
+  structured_schema: schema.StructuredSchema | None = None
+  format_type: data.FormatType = data.FormatType.JSON
+  temperature: float = 0.0
+  max_workers: int = 10
+  _client: openai.OpenAI | None = dataclasses.field(
+      default=None, repr=False, compare=False
+  )
+  _extra_kwargs: dict[str, Any] = dataclasses.field(
+      default_factory=dict, repr=False, compare=False
+  )
+
+  def __init__(
+      self,
+      model_id: str = 'openai/gpt-oss-120b:cerebras',
+      api_key: str | None = None,
+      base_url: str = 'https://router.huggingface.co/v1',
+      structured_schema: schema.StructuredSchema | None = None,
+      format_type: data.FormatType = data.FormatType.JSON,
+      temperature: float = 0.0,
+      max_workers: int = 10,
+      **kwargs,
+  ) -> None:
+    """Initialize the HuggingFace language model.
+
+    Args:
+      model_id: The HuggingFace model ID to use (e.g., 'openai/gpt-oss-120b:cerebras').
+      api_key: HuggingFace token (HF_TOKEN environment variable).
+      base_url: Base URL for HuggingFace's OpenAI-compatible API.
+      structured_schema: Optional StructuredSchema for structured output.
+      format_type: Output format (JSON or YAML).
+      temperature: Sampling temperature.
+      max_workers: Maximum number of parallel API calls.
+      **kwargs: Ignored extra parameters so callers can pass a superset of
+        arguments shared across back-ends without raising ``TypeError``.
+    """
+    self.model_id = model_id
+    self.api_key = api_key
+    self.base_url = base_url
+    self.structured_schema = structured_schema
+    self.format_type = format_type
+    self.temperature = temperature
+    self.max_workers = max_workers
+    self._extra_kwargs = kwargs or {}
+
+    if not self.api_key:
+      import os
+      self.api_key = os.getenv('HF_TOKEN')
+      if not self.api_key:
+        raise ValueError('HF_TOKEN not provided in api_key parameter or environment variable.')
+
+    # Initialize the OpenAI client with HuggingFace base URL
+    self._client = openai.OpenAI(
+        base_url=self.base_url,
+        api_key=self.api_key
+    )
+
+    super().__init__(
+        constraint=schema.Constraint(constraint_type=schema.ConstraintType.NONE)
+    )
+
+  def _process_single_prompt(self, prompt: str, config: dict) -> ScoredOutput:
+    """Process a single prompt and return a ScoredOutput."""
+    try:
+      # Build API call parameters
+      api_params = {
+          'model': self.model_id,
+          'max_tokens': config.get('max_output_tokens', 1024),
+          'temperature': config.get('temperature', self.temperature),
+          'messages': [{'role': 'user', 'content': prompt}]
+      }
+      
+      # Add optional parameters
+      if 'top_p' in config:
+        api_params['top_p'] = config['top_p']
+
+      # Handle structured output with JSON schema
+      if self.structured_schema:
+        api_params['response_format'] = {
+            'type': 'json_schema',
+            'json_schema': {
+                'name': 'structured_output',
+                'schema': self.structured_schema.openai_schema
+            }
+        }
+      elif self.format_type == data.FormatType.JSON:
+        api_params['response_format'] = {'type': 'json_object'}
+        # Add JSON format instruction to prompt
+        if 'respond in valid JSON format' not in prompt.lower():
+          prompt = prompt + '\n\nPlease respond in valid JSON format.'
+          api_params['messages'][0]['content'] = prompt
+      
+      # Create the chat completion using the OpenAI client
+      response = self._client.chat.completions.create(**api_params)
+
+      # Extract the response text
+      output_text = response.choices[0].message.content
+
+      return ScoredOutput(score=1.0, output=output_text)
+
+    except Exception as e:
+      raise InferenceOutputError(f'HuggingFace API error: {str(e)}') from e
+
+  def infer(
+      self, batch_prompts: Sequence[str], **kwargs
+  ) -> Iterator[Sequence[ScoredOutput]]:
+    """Runs inference on a list of prompts via HuggingFace's OpenAI-compatible API.
+
+    Args:
+      batch_prompts: A list of string prompts.
+      **kwargs: Additional generation params (temperature, top_p, etc.)
+
+    Yields:
+      Lists of ScoredOutputs.
+    """
+    config = {
+        'temperature': kwargs.get('temperature', self.temperature),
+    }
+    if 'max_output_tokens' in kwargs:
+      config['max_output_tokens'] = kwargs['max_output_tokens']
+    if 'top_p' in kwargs:
+      config['top_p'] = kwargs['top_p']
+
+    # Use parallel processing for batches larger than 1
+    if len(batch_prompts) > 1 and self.max_workers > 1:
+      with concurrent.futures.ThreadPoolExecutor(
+          max_workers=min(self.max_workers, len(batch_prompts))
+      ) as executor:
+        future_to_index = {
+            executor.submit(
+                self._process_single_prompt, prompt, config.copy()
+            ): i
+            for i, prompt in enumerate(batch_prompts)
+        }
+
+        results: list[ScoredOutput | None] = [None] * len(batch_prompts)
+        for future in concurrent.futures.as_completed(future_to_index):
+          index = future_to_index[future]
+          try:
+            results[index] = future.result()
+          except Exception as e:
+            raise InferenceOutputError(
+                f'Parallel inference error: {str(e)}'
+            ) from e
+
+        for result in results:
+          if result is None:
+            raise InferenceOutputError('Failed to process one or more prompts')
+          yield [result]
+    else:
+      # Sequential processing for single prompt or worker
+      for prompt in batch_prompts:
+        result = self._process_single_prompt(prompt, config.copy())
+        yield [result]
+
+  def parse_output(self, output: str) -> Any:
+    """Parses HuggingFace output as JSON or YAML.
 
     Note: This expects raw JSON/YAML without code fences.
     Code fence extraction is handled by resolver.py.
