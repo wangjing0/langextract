@@ -28,14 +28,17 @@ import openai
 import requests
 from typing_extensions import override
 import yaml
-
-
+import re
+import logging
 
 from langextract import data
 from langextract import schema
 
+logging.basicConfig(level=logging.DEBUG)
+
 
 _OLLAMA_DEFAULT_MODEL_URL = 'http://localhost:11434'
+_HF_DEFAULT_MODEL_URL = 'https://router.huggingface.co/v1'
 
 
 @dataclasses.dataclass(frozen=True)
@@ -745,7 +748,7 @@ class HFLanguageModel(BaseLanguageModel):
 
   model_id: str = 'openai/gpt-oss-120b:cerebras'
   api_key: str | None = None
-  base_url: str = 'https://router.huggingface.co/v1'
+  base_url: str = _HF_DEFAULT_MODEL_URL
   structured_schema: schema.StructuredSchema | None = None
   format_type: data.FormatType = data.FormatType.JSON
   temperature: float = 0.0
@@ -812,7 +815,7 @@ class HFLanguageModel(BaseLanguageModel):
       # Build API call parameters
       api_params = {
           'model': self.model_id,
-          'max_tokens': config.get('max_output_tokens', 2048),  # Increase default for HF models
+          'max_tokens': config.get('max_output_tokens', 4096),  # Increase default for HF models
           'temperature': config.get('temperature', self.temperature),
           'messages': [{'role': 'user', 'content': prompt}]
       }
@@ -824,23 +827,28 @@ class HFLanguageModel(BaseLanguageModel):
       # Handle structured output - HuggingFace doesn't support response_format
       # Instead, we add instructions to the prompt
       if self.structured_schema:
-        schema_instruction = f"\n\nPlease respond in valid JSON format matching this schema: {self.structured_schema.openai_schema}"
+        schema_instruction = f"\n\nPlease respond in valid JSON format matching this schema: {self.structured_schema.openai_schema}. Wrap your response in ```json and ```"
         prompt = prompt + schema_instruction
         api_params['messages'][0]['content'] = prompt
       elif self.format_type == data.FormatType.JSON:
         # Add JSON format instruction to prompt
         if 'respond in valid JSON format' not in prompt.lower():
-          prompt = prompt + '\n\nPlease respond in valid JSON format.'
+          prompt = prompt + '\n\nPlease respond in valid JSON format, wrapped in ```json and ```'
           api_params['messages'][0]['content'] = prompt
       
       # Create the chat completion using the OpenAI client
       response = self._client.chat.completions.create(**api_params)
 
-      # Extract the response text
-      output_text = response.choices[0].message.content
+      # Extract the response text - be more careful with regex cleanup
+      raw_output = response.choices[0].message.content
+      if raw_output:
+        # Remove ```json at the beginning and ``` at the end more carefully
+        output_text = re.sub(r'^```json\s*', '', raw_output.strip())
+        output_text = re.sub(r'\s*```$', '', output_text.strip())
+      else:
+        output_text = raw_output
       
       # Debug logging
-      import logging
       logging.debug(f"HF Model response (length: {len(output_text or '')}): {repr(output_text)}")
 
       return ScoredOutput(score=1.0, output=output_text)
