@@ -812,7 +812,7 @@ class HFLanguageModel(BaseLanguageModel):
       # Build API call parameters
       api_params = {
           'model': self.model_id,
-          'max_tokens': config.get('max_output_tokens', 1024),
+          'max_tokens': config.get('max_output_tokens', 2048),  # Increase default for HF models
           'temperature': config.get('temperature', self.temperature),
           'messages': [{'role': 'user', 'content': prompt}]
       }
@@ -821,17 +821,13 @@ class HFLanguageModel(BaseLanguageModel):
       if 'top_p' in config:
         api_params['top_p'] = config['top_p']
 
-      # Handle structured output with JSON schema
+      # Handle structured output - HuggingFace doesn't support response_format
+      # Instead, we add instructions to the prompt
       if self.structured_schema:
-        api_params['response_format'] = {
-            'type': 'json_schema',
-            'json_schema': {
-                'name': 'structured_output',
-                'schema': self.structured_schema.openai_schema
-            }
-        }
+        schema_instruction = f"\n\nPlease respond in valid JSON format matching this schema: {self.structured_schema.openai_schema}"
+        prompt = prompt + schema_instruction
+        api_params['messages'][0]['content'] = prompt
       elif self.format_type == data.FormatType.JSON:
-        api_params['response_format'] = {'type': 'json_object'}
         # Add JSON format instruction to prompt
         if 'respond in valid JSON format' not in prompt.lower():
           prompt = prompt + '\n\nPlease respond in valid JSON format.'
@@ -842,6 +838,10 @@ class HFLanguageModel(BaseLanguageModel):
 
       # Extract the response text
       output_text = response.choices[0].message.content
+      
+      # Debug logging
+      import logging
+      logging.debug(f"HF Model response (length: {len(output_text or '')}): {repr(output_text)}")
 
       return ScoredOutput(score=1.0, output=output_text)
 

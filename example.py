@@ -67,6 +67,9 @@ def main(provider='google'):
     elif provider == 'anthropic':
         model_id = "claude-3-5-haiku-latest"
         language_model_type = inference.ClaudeLanguageModel
+    elif provider == 'hf':
+        model_id = 'openai/gpt-oss-120b:cerebras'
+        language_model_type = inference.HFLanguageModel
     else:
         raise ValueError(f"Invalid provider: {provider}")
 
@@ -77,9 +80,10 @@ def main(provider='google'):
         examples=examples,
         model_id=model_id,
         language_model_type=language_model_type,
-        extraction_passes=3,    # Improves recall through multiple passes
-        max_workers=10,         # Parallel processing for speed
-        max_char_buffer=1000    # Smaller contexts for better accuracy
+        extraction_passes=1,    # Reduce to 1 pass for debugging
+        max_workers=1,          # Single worker for debugging
+        max_char_buffer=1000,   # Smaller contexts for better accuracy
+        debug=True if provider == 'hf' else False  # Enable debug for HF
     )
 
     lx.io.save_annotated_documents([result], output_name=f"{provider}_extraction_results.jsonl")
@@ -99,4 +103,4 @@ def main(provider='google'):
 
 
 if __name__ == "__main__":
-    main(provider='openai')
+    main(provider='anthropic')

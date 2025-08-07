@@ -2,13 +2,13 @@
 
 ## Introduction
 
-LangExtract is an extension of Google's LangExtract package that provides a powerful and unified interface for extracting structured information from unstructured text using Large Language Models (LLMs). Built with enterprise-grade scalability and reliability in mind, it seamlessly integrates with all major LLM providers including OpenAI, Anthropic, Google, or local models via Ollama.
+LangExtract is an extension of Google's LangExtract package that provides a powerful and unified interface for extracting structured information from unstructured text using Large Language Models (LLMs). Built with enterprise-grade scalability and reliability in mind, it seamlessly integrates with all major LLM providers including OpenAI, Anthropic, Google, or local models via Ollama. Open weight models like OpenAI's GPT-OSS-120B and GPT-OSS-20B via HuggingFace's OpenAI-compatible API is also supported.
 
 The library enables developers to transform raw text into structured data through natural language instructions and example-driven guidance, making it ideal for information extraction, entity recognition, relationship mapping, and content analysis tasks across various domains.
 
 ## Features and Capabilities
 
-- **Multi-Provider Support**: Works with OpenAI GPT models, Anthropic Claude, Google Gemini, and local Ollama models
+- **Multi-Provider Support**: Works with OpenAI GPT models, Anthropic Claude, Google Gemini, HuggingFace OpenAI-compatible API, and local Ollama models
 - **Structured Output**: Built-in schema constraints and JSON/YAML formatting
 - **Parallel Processing**: Concurrent API calls with configurable worker pools for high-throughput processing
 - **Multi-Pass Extraction**: Sequential extraction passes to improve recall and find additional entities
@@ -105,6 +105,27 @@ model = GeminiLanguageModel(
 - `gemini-1.5-pro` - High capability
 - `gemini-1.5-flash` - Balanced performance
 
+### HFLanguageModel (HuggingFace)
+```python
+from langextract.inference import HFLanguageModel
+
+model = HFLanguageModel(
+    model_id='openai/gpt-oss-120b:cerebras',  # or other HF models
+    api_key='your-hf-token',  # or set HF_TOKEN environment variable
+    base_url='https://router.huggingface.co/v1',  # Default HF router
+    temperature=0.0,
+    max_workers=10,
+    structured_schema=None,  # Optional schema for structured output
+    format_type=data.FormatType.JSON
+)
+```
+
+**Popular HuggingFace Models:**
+- `openai/gpt-oss-120b:cerebras` - High-performance open model
+- `meta-llama/llama-3.2-3b-instruct` - Meta's Llama 3.2
+- `microsoft/DialoGPT-medium` - Microsoft's conversational model
+- `mistralai/mixtral-8x7b-instruct` - Mistral's mixture of experts
+
 ### OllamaLanguageModel (Local/Self-Hosted)
 ```python
 from langextract.inference import OllamaLanguageModel
@@ -146,6 +167,9 @@ export OPENAI_API_KEY="your-openai-api-key"
 # For Google Gemini
 export GOOGLE_API_KEY="your-google-api-key"
 
+# For HuggingFace models
+export HF_TOKEN="your-huggingface-token"
+
 # Ollama doesn't require an API key (local models)
 ```
 
@@ -183,6 +207,23 @@ result = lx.extract(
     batch_length=50,       # Chunks per batch
     model_id='gpt-4o-mini',
     language_model_type=inference.OpenAILanguageModel
+)
+```
+
+### Using HuggingFace Models
+Access cutting-edge open-source models via HuggingFace's router:
+
+```python
+result = lx.extract(
+    text_or_documents=input_text,
+    prompt_description=prompt,
+    examples=examples,
+    model_id='openai/gpt-oss-120b:cerebras',
+    language_model_type=inference.HFLanguageModel,
+    language_model_params={
+        'api_key': 'your-hf-token',  # or set HF_TOKEN env var
+        'temperature': 0.0
+    }
 )
 ```
 
@@ -244,7 +285,8 @@ results = lx.extract(
 ### Language Models
 - `inference.ClaudeLanguageModel` - Anthropic Claude
 - `inference.OpenAILanguageModel` - OpenAI GPT
-- `inference.GeminiLanguageModel` - Google Gemini  
+- `inference.GeminiLanguageModel` - Google Gemini
+- `inference.HFLanguageModel` - HuggingFace models via OpenAI-compatible API
 - `inference.OllamaLanguageModel` - Local Ollama models
 
 ## Cost Considerations
@@ -260,6 +302,7 @@ API costs vary by provider and model. Key factors affecting cost:
 - Start with smaller models for testing (gpt-4o-mini, claude-3-5-haiku-latest)  
 - Use `extraction_passes=1` initially, increase only if recall is insufficient
 - Monitor usage with small test runs before processing large datasets
+- Consider models hosted on HuggingFace for access to open-source alternatives
 - Consider local Ollama models for cost-sensitive applications
 
 ## Contributing

@@ -230,7 +230,11 @@ class TestHFLanguageModel(absltest.TestCase):
     mock_response.choices = [mock_choice]
     mock_client.chat.completions.create.return_value = mock_response
     
-    model = inference.HFLanguageModel(api_key="test_token")
+    from langextract import data
+    model = inference.HFLanguageModel(
+        api_key="test_token",
+        format_type=data.FormatType.YAML  # Use YAML to avoid JSON prompt modification
+    )
     
     result = model._process_single_prompt("Test prompt", {})
     
@@ -309,15 +313,20 @@ class TestHFLanguageModel(absltest.TestCase):
         structured_schema=mock_schema
     )
     
-    result = model._process_single_prompt("Test prompt", {})
+    model._process_single_prompt("Test prompt", {})
     
-    # Verify structured output was requested
+    # Verify structured output was requested via prompt instruction (not response_format)
     call_args = mock_client.chat.completions.create.call_args
     api_params = call_args[1] if call_args[1] else call_args[0]
     
-    self.assertIn('response_format', api_params)
-    self.assertEqual(api_params['response_format']['type'], 'json_schema')
-    self.assertIn('json_schema', api_params['response_format'])
+    # HuggingFace doesn't use response_format, so it shouldn't be present
+    self.assertNotIn('response_format', api_params)
+    
+    # Instead, check that the prompt was modified to include schema instructions
+    prompt_content = api_params['messages'][0]['content']
+    self.assertIn('Please respond in valid JSON format matching this schema', prompt_content)
+    self.assertIn('type', prompt_content)
+    self.assertIn('object', prompt_content)
 
   @mock.patch('openai.OpenAI')
   def test_hf_json_format_type(self, mock_openai):
@@ -340,14 +349,14 @@ class TestHFLanguageModel(absltest.TestCase):
         format_type=data.FormatType.JSON
     )
     
-    result = model._process_single_prompt("Test prompt", {})
+    model._process_single_prompt("Test prompt", {})
     
-    # Verify JSON object format was requested
+    # Verify JSON format was requested via prompt instruction (not response_format)
     call_args = mock_client.chat.completions.create.call_args
     api_params = call_args[1] if call_args[1] else call_args[0]
     
-    self.assertIn('response_format', api_params)
-    self.assertEqual(api_params['response_format']['type'], 'json_object')
+    # HuggingFace doesn't use response_format, so it shouldn't be present
+    self.assertNotIn('response_format', api_params)
     
     # Verify prompt was modified to request JSON
     expected_content = 'Test prompt\n\nPlease respond in valid JSON format.'

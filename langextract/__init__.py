@@ -190,16 +190,21 @@ def extract(
       api_key = os.environ.get("OPENAI_API_KEY")
     elif language_model_type == inference.GeminiLanguageModel:
       api_key = os.environ.get("GOOGLE_API_KEY")
+    elif language_model_type == inference.HFLanguageModel:
+      api_key = os.environ.get("HF_TOKEN")
 
     # Check if API key is required for cloud-hosted models
-    cloud_models = (inference.ClaudeLanguageModel, inference.OpenAILanguageModel, inference.GeminiLanguageModel)
+    cloud_models = (inference.ClaudeLanguageModel, inference.OpenAILanguageModel, inference.GeminiLanguageModel, inference.HFLanguageModel)
     if not api_key and language_model_type in cloud_models:
+      model_name, env_var = "Unknown", "API_KEY"  # Default values
       if language_model_type == inference.ClaudeLanguageModel:
         model_name, env_var = "Claude", "ANTHROPIC_API_KEY"
       elif language_model_type == inference.OpenAILanguageModel:
         model_name, env_var = "OpenAI", "OPENAI_API_KEY"
       elif language_model_type == inference.GeminiLanguageModel:
         model_name, env_var = "Gemini", "GOOGLE_API_KEY"
+      elif language_model_type == inference.HFLanguageModel:
+        model_name, env_var = "HuggingFace", "HF_TOKEN"
       
       raise ValueError(
           f"API key must be provided for {model_name} models via the api_key"
@@ -228,7 +233,7 @@ def extract(
     base_lm_kwargs["model_id"] = model_id
     
     # Add schema for models that support it
-    if language_model_type in (inference.ClaudeLanguageModel, inference.OpenAILanguageModel, inference.GeminiLanguageModel):
+    if language_model_type in (inference.ClaudeLanguageModel, inference.OpenAILanguageModel, inference.GeminiLanguageModel, inference.HFLanguageModel):
       base_lm_kwargs["structured_schema"] = model_schema
     
     # Add seed for non-Ollama models
