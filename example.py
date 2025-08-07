@@ -68,7 +68,7 @@ def main(provider='google'):
         model_id = "claude-3-5-haiku-latest"
         language_model_type = inference.ClaudeLanguageModel
     elif provider == 'hf':
-        model_id = 'openai/gpt-oss-120b:cerebras'
+        model_id = 'openai/gpt-oss-120b:cerebras' # gpt-oss-120b, gpt-oss-20b
         language_model_type = inference.HFLanguageModel
     else:
         raise ValueError(f"Invalid provider: {provider}")
@@ -80,8 +80,8 @@ def main(provider='google'):
         examples=examples,
         model_id=model_id,
         language_model_type=language_model_type,
-        extraction_passes=1,    # Reduce to 1 pass for debugging
-        max_workers=1,          # Single worker for debugging
+        extraction_passes=3,    # Reduce to 1 pass for debugging
+        max_workers=10,         # Single worker for debugging
         max_char_buffer=1000,   # Smaller contexts for better accuracy
         debug=True if provider == 'hf' else False  # Enable debug for HF
     )

@@ -19,14 +19,13 @@ The library enables developers to transform raw text into structured data throug
 
 ## Installation
 
-
 ```bash
-git clone git@gitlab.com:accreteai-main/ai-research/relation-extraction-research/langextract.git
+git clone <this repo url>
 cd langextract
 pip install -e .
 ```
 
-Or using uv (recommended for faster dependency resolution):
+Or using uv (recommended for development):
 
 ```bash
 uv init && uv sync
@@ -39,6 +38,7 @@ LangExtract requires Python 3.8+ and installs the following key dependencies:
 - `google-genai` - Google Gemini API client
 - `anthropic` - Anthropic Claude API client  
 - `openai` - OpenAI GPT API client
+- `huggingface-hub` - HuggingFace API client
 - `requests` - HTTP client for Ollama and URL downloads
 - `pydantic` - Data validation and serialization
 
