@@ -73,13 +73,6 @@ def main(provider='google'):
     else:
         raise ValueError(f"Invalid provider: {provider}")
 
-    # Set language_model_params for HF to increase max_tokens
-    language_model_params = {}
-    if provider == 'hf':
-        language_model_params = {
-            'max_output_tokens': 4096  # Increase token limit for HF models
-        }
-    
     # Process Romeo & Juliet directly from Project Gutenberg
     result = lx.extract(
         text_or_documents= input_text,
@@ -87,7 +80,6 @@ def main(provider='google'):
         examples=examples,
         model_id=model_id,
         language_model_type=language_model_type,
-        language_model_params=language_model_params,
         extraction_passes=1,    # Reduce to 1 pass for debugging
         max_workers=1,          # Single worker for debugging
         max_char_buffer=1000,   # Smaller contexts for better accuracy

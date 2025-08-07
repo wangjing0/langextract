@@ -2,7 +2,7 @@
 
 ## Introduction
 
-LangExtract is an extension of Google's LangExtract package that provides a powerful and unified interface for extracting structured information from unstructured text using Large Language Models (LLMs). Built with enterprise-grade scalability and reliability in mind, it seamlessly integrates with all major LLM providers including OpenAI, Anthropic, Google, or local models via Ollama. Open weight models like OpenAI's GPT-OSS-120B and GPT-OSS-20B via HuggingFace's OpenAI-compatible API is also supported.
+LangExtract is an extension of Google's LangExtract package that provides a powerful and unified interface for extracting structured information from unstructured text using Large Language Models (LLMs). Built with enterprise-grade scalability and reliability in mind, it seamlessly integrates with all major LLM providers including OpenAI, Anthropic, Google, or local models via Ollama. Open weight models like OpenAI's gpt-oss-120b and gpt-oss-20b via HuggingFace's OpenAI-compatible API is also supported.
 
 The library enables developers to transform raw text into structured data through natural language instructions and example-driven guidance, making it ideal for information extraction, entity recognition, relationship mapping, and content analysis tasks across various domains.
 
