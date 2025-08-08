@@ -36,7 +36,6 @@ from langextract import schema
 
 logging.basicConfig(level=logging.DEBUG)
 
-
 _OLLAMA_DEFAULT_MODEL_URL = 'http://localhost:11434'
 _HF_DEFAULT_MODEL_URL = 'https://router.huggingface.co/v1'
 
@@ -890,8 +889,6 @@ class HFLanguageModel(BaseLanguageModel):
       else:
         output_text = raw_output
       
-      # Debug logging
-      logging.debug(f"HF Model response (length: {len(output_text or '')}): {repr(output_text)}")
 
       return ScoredOutput(score=1.0, output=output_text)
 
