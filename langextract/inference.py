@@ -635,12 +635,42 @@ class OpenAILanguageModel(BaseLanguageModel):
     """Process a single prompt and return a ScoredOutput."""
     try:
       # Build API call parameters
-      api_params = {
-          'model': self.model_id,
-          'max_tokens': config.get('max_output_tokens', 1024),
-          'temperature': config.get('temperature', self.temperature),
-          'messages': [{'role': 'user', 'content': prompt}]
-      }
+      if self.model_id.startswith('gpt-5'):
+          # GPT-5 models use different message format with developer role
+          api_params = {
+              'model': self.model_id,
+              'messages': [
+                  {
+                      'role': 'developer',
+                      'content': [
+                          {
+                              'type': 'text',
+                              'text': 'You are an expert entity extraction assistant. Extract entities and relationships as requested.'
+                          }
+                      ]
+                  },
+                  {
+                      'role': 'user',
+                      'content': [{'type': 'text', 'text': prompt}]
+                  }
+              ],
+              'reasoning_effort': 'medium'
+          }
+      else:
+          api_params = {
+              'model': self.model_id,
+              'messages': [{'role': 'user', 'content': prompt}]
+          }
+      
+      # Use max_completion_tokens for GPT-5 models, max_tokens for others
+      max_tokens_value = config.get('max_output_tokens', 1024)
+      if self.model_id.startswith('gpt-5'):
+          # GPT-5-nano has limited output capacity, be conservative
+          api_params['max_completion_tokens'] = 8000
+          # GPT-5 does not support temperature
+      else:
+          api_params['max_tokens'] = max_tokens_value
+          api_params['temperature'] = config.get('temperature', self.temperature)
       
       # Add optional parameters
       if 'top_p' in config:
@@ -656,17 +686,29 @@ class OpenAILanguageModel(BaseLanguageModel):
             }
         }
       elif self.format_type == data.FormatType.JSON:
+        # Use json_object for GPT-5, regular json_object for others
         api_params['response_format'] = {'type': 'json_object'}
         # Add JSON format instruction to prompt
         if 'respond in valid JSON format' not in prompt.lower():
           prompt = prompt + '\n\nPlease respond in valid JSON format.'
-          api_params['messages'][0]['content'] = prompt
+          # Update prompt in the correct message format
+          if self.model_id.startswith('gpt-5'):
+              api_params['messages'][1]['content'][0]['text'] = prompt  # Update user message
+          else:
+              api_params['messages'][0]['content'] = prompt
       
       # Create the chat completion using the v1.x client API
       response = self._client.chat.completions.create(**api_params)
 
       # Extract the response text using the v1.x response format
       output_text = response.choices[0].message.content
+      
+      # Handle GPT-5 output limitations
+      if self.model_id.startswith('gpt-5'):
+          # GPT-5-nano has severe output limitations, handle gracefully
+          if (not output_text or output_text.strip() == '') and response.choices[0].finish_reason == 'length':
+              # Return a structured error message that can be parsed
+              output_text = '{"error": "GPT-5-nano output capacity exceeded", "message": "Consider using shorter prompts or fewer examples"}'
 
       return ScoredOutput(score=1.0, output=output_text)
 

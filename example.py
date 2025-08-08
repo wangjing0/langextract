@@ -62,7 +62,7 @@ def main(provider='google'):
         model_id = "gemini-2.5-flash"
         language_model_type = inference.GeminiLanguageModel
     elif provider == 'openai':
-        model_id = 'gpt-4.1'# "gpt-4o-mini"
+        model_id = 'gpt-5-nano'#'gpt-4.1'# "gpt-4o-mini"
         language_model_type = inference.OpenAILanguageModel
     elif provider == 'anthropic':
         model_id = "claude-3-5-haiku-latest"
@@ -80,7 +80,7 @@ def main(provider='google'):
         examples=examples,
         model_id=model_id,
         language_model_type=language_model_type,
-        extraction_passes=3,    # Reduce to 1 pass for debugging
+        extraction_passes=1,    # Use 1 pass for GPT-5-nano stability
         max_workers=10,         # Single worker for debugging
         max_char_buffer=1000,   # Smaller contexts for better accuracy
         debug=True if provider == 'hf' else False  # Enable debug for HF
@@ -103,4 +103,4 @@ def main(provider='google'):
 
 
 if __name__ == "__main__":
-    main(provider='hf')
+    main(provider='openai')
