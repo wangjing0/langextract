@@ -80,10 +80,10 @@ def main(provider='google'):
         examples=examples,
         model_id=model_id,
         language_model_type=language_model_type,
-        extraction_passes=1,    # Use 1 pass for GPT-5-nano stability
+        extraction_passes=1,    # Use 1 pass for GPT-5 stability
         max_workers=10,         # Single worker for debugging
         max_char_buffer=1000,   # Smaller contexts for better accuracy
-        debug=True # Enable debug for HF
+        debug=True
     )
 
     lx.io.save_annotated_documents([result], output_name=f"{provider}_extraction_results.jsonl")
