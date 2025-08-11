@@ -29,12 +29,8 @@ import requests
 from typing_extensions import override
 import yaml
 import re
-import logging
-
 from langextract import data
 from langextract import schema
-
-logging.basicConfig(level=logging.DEBUG)
 
 _OLLAMA_DEFAULT_MODEL_URL = 'http://localhost:11434'
 _HF_DEFAULT_MODEL_URL = 'https://router.huggingface.co/v1'

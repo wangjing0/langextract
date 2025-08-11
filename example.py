@@ -62,7 +62,7 @@ def main(provider='google'):
         model_id = "gemini-2.5-flash"
         language_model_type = inference.GeminiLanguageModel
     elif provider == 'openai':
-        model_id = 'gpt-5-nano'#'gpt-4.1'# "gpt-4o-mini"
+        model_id = "gpt-5-mini"
         language_model_type = inference.OpenAILanguageModel
     elif provider == 'anthropic':
         model_id = "claude-3-5-haiku-latest"
@@ -83,7 +83,7 @@ def main(provider='google'):
         extraction_passes=1,    # Use 1 pass for GPT-5-nano stability
         max_workers=10,         # Single worker for debugging
         max_char_buffer=1000,   # Smaller contexts for better accuracy
-        debug=True if provider == 'hf' else False  # Enable debug for HF
+        debug=True # Enable debug for HF
     )
 
     lx.io.save_annotated_documents([result], output_name=f"{provider}_extraction_results.jsonl")
