@@ -6,16 +6,16 @@ LangExtract is an extension of Google's LangExtract package that provides a powe
 
 The library enables developers to transform raw text into structured data through natural language instructions and example-driven guidance, making it ideal for information extraction, entity recognition, relationship mapping, and content analysis tasks across various domains.
 
-## Features and Capabilities
+## TL;DR Key Takeaways
 
-- **Multi-Provider Support**: Works with OpenAI GPT models, Anthropic Claude, Google Gemini, HuggingFace OpenAI-compatible API, and local Ollama models
-- **Structured Output**: Built-in schema constraints and JSON/YAML formatting
-- **Parallel Processing**: Concurrent API calls with configurable worker pools for high-throughput processing
+- **Multi-Provider Support**: Works with OpenAI GPT models, Anthropic Claude, Google Gemini, HuggingFace OpenAI-compatible API, and local Ollama models. Compatible with latest models like GPT-5, Claude-4 and more.
+- **Example-Driven Few-Shot Learning**: LangExtract minimizes the need for extensive data labeling and model fine-tuning, making it accessible to users with varying technical expertise. Uses high-quality examples to guide extraction quality and consistency
+- **Long-Context Processing**: The tool efficiently handles large datasets while maintaining contextual accuracy, making it ideal for complex NLP tasks.
+- **Parallel Processing**: Concurrent API calls with configurable worker pools for high-throughput processing.
 - **Multi-Pass Extraction**: Sequential extraction passes to improve recall and find additional entities
 - **Flexible Input**: Process strings, documents, or URLs with automatic content downloading
 - **Rich Visualization**: Interactive HTML visualizations of extraction results
 - **Production Ready**: Environment variable management, error handling, and comprehensive testing
-- **Example-Driven**: Uses high-quality examples to guide extraction quality and consistency
 
 ## Installation
 
@@ -60,17 +60,13 @@ model = ClaudeLanguageModel(
 )
 ```
 
-**Available Models:**
-- `claude-3-5-haiku-latest` - Fast, cost-effective
-- `claude-3-5-sonnet-latest` - Balanced performance
-- `claude-3-opus-latest` - Highest capability
 
 ### OpenAILanguageModel
 ```python
 from langextract.inference import OpenAILanguageModel
 
 model = OpenAILanguageModel(
-    model_id='gpt-4o-mini',  # or gpt-4o, gpt-4-turbo
+    model_id='gpt-5-nano',  # or gpt-4o
     api_key='your-api-key',  # or set OPENAI_API_KEY
     organization='your-org-id',  # Optional
     temperature=0.0,
@@ -80,11 +76,6 @@ model = OpenAILanguageModel(
 )
 ```
 
-**Available Models:**
-- `gpt-4o-mini` - Cost-effective, fast
-- `gpt-4o` - Latest flagship model
-- `gpt-4-turbo` - High performance
-- `gpt-3.5-turbo` - Legacy, budget option
 
 ### GeminiLanguageModel (Google)
 ```python
@@ -100,10 +91,6 @@ model = GeminiLanguageModel(
 )
 ```
 
-**Available Models:**
-- `gemini-2.5-flash` - Latest, fastest
-- `gemini-1.5-pro` - High capability
-- `gemini-1.5-flash` - Balanced performance
 
 ### HFLanguageModel (HuggingFace)
 ```python
@@ -139,11 +126,6 @@ model = OllamaLanguageModel(
 )
 ```
 
-**Popular Ollama Models:**
-- `gemma2:latest` - Google's Gemma 2
-- `llama3.1:latest` - Meta's Llama 3.1
-- `mistral:latest` - Mistral AI
-- `codellama:latest` - Code-specialized Llama
 
 ## Quick Start Example
 
@@ -152,6 +134,38 @@ Here's a complete example based on the included `example.py`:
 ```bash
 uv run example.py
 ```
+
+### Use cases from `example.py`
+
+The included script demonstrates end‑to‑end extraction driven by a natural‑language prompt and a high‑quality example, across multiple model providers. It:
+
+- Defines a prompt and a guiding example with `lx.data.ExampleData` and `lx.data.Extraction`.
+- Selects a provider and model (`openai`, `google`, `anthropic`, or `hf`) and maps it to the matching `inference.*LanguageModel`.
+- Runs `lx.extract(...)` with tuned parameters (`extraction_passes=1`, `max_workers=10`, `max_char_buffer=1000`).
+- Saves results to `output/{provider}_extraction_results.jsonl` and renders an HTML visualization at `output/{provider}_extraction_results_visualization.html`.
+
+Run the example for different providers (ensure the corresponding API key env vars are set as shown below):
+
+```bash
+# OpenAI (default in __main__)
+uv run example.py
+
+# Google Gemini
+uv run python -c "import example; example.main('google')"
+
+# Anthropic Claude
+uv run python -c "import example; example.main('anthropic')"
+
+# HuggingFace OpenAI-compatible router (open-weight models)
+uv run python -c "import example; example.main('hf')"
+```
+
+Expected outputs:
+
+- JSONL: `output/{provider}_extraction_results.jsonl`
+- HTML visualization: `output/{provider}_extraction_results_visualization.html`
+
+Tip: The prompt and the in‑code example in `example.py` show how to nudge models toward high‑quality, consistent entity and relationship extraction using exact text spans.
 
 ## Environment Variables and Configuration
 
