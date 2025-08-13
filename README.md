@@ -6,7 +6,7 @@ LangExtract is an extension of Google's LangExtract package that provides a powe
 
 The library enables developers to transform raw text into structured data through natural language instructions and example-driven guidance, making it ideal for information extraction, entity recognition, relationship mapping, and content analysis tasks across various domains.
 
-## TL;DR Key Takeaways
+## Key Takeaways
 
 - **Multi-Provider Support**: Works with OpenAI GPT models, Anthropic Claude, Google Gemini, HuggingFace OpenAI-compatible API, and local Ollama models. Compatible with latest models like GPT-5, Claude-4 and more.
 - **Example-Driven Few-Shot Learning**: LangExtract minimizes the need for extensive data labeling and model fine-tuning, making it accessible to users with varying technical expertise. Uses high-quality examples to guide extraction quality and consistency
@@ -318,6 +318,13 @@ API costs vary by provider and model. Key factors affecting cost:
 - Monitor usage with small test runs before processing large datasets
 - Consider models hosted on HuggingFace for access to open-source alternatives
 - Consider local Ollama models for cost-sensitive applications
+
+
+## Roadmap
+- [ ] Add support fo Azure OpenAI
+- [ ] Improve example-driven extraction with more complex schemas
+- [ ] Self improving prompt, e.g. how to incooporate GPT-5 Prompt Optimizer  https://cookbook.openai.com/examples/gpt-5/prompt-optimization-cookbook
+
 
 ## Contributing
 
