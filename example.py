@@ -57,18 +57,18 @@ Langfun is a PyGlove powered library that aims to make language models (LM) fun 
 To unlock the magic of Langfun, you can start with Langfun 101. Notably, Langfun is compatible with popular LLMs such as Gemini, GPT, Claude, all without the need for additional fine-tuning.
 """
 
-def main(provider='google'):
+def main(provider='google', model_id=None):
     if provider == 'google':
-        model_id = "gemini-2.5-flash"
+        model_id = model_id or "gemini-2.5-flash"
         language_model_type = inference.GeminiLanguageModel
     elif provider == 'openai':
-        model_id = "gpt-5-mini"
+        model_id = model_id or "gpt-5-mini"
         language_model_type = inference.OpenAILanguageModel
     elif provider == 'anthropic':
-        model_id = "claude-3-5-haiku-latest"
+        model_id = model_id or "claude-3-5-haiku-latest"
         language_model_type = inference.ClaudeLanguageModel
     elif provider == 'hf':
-        model_id = 'openai/gpt-oss-120b:cerebras' # gpt-oss-120b, gpt-oss-20b
+        model_id = model_id or 'openai/gpt-oss-120b:cerebras' # gpt-oss-120b, gpt-oss-20b
         language_model_type = inference.HFLanguageModel
     else:
         raise ValueError(f"Invalid provider: {provider}")
@@ -103,4 +103,4 @@ def main(provider='google'):
 
 
 if __name__ == "__main__":
-    main(provider='openai')
+    main(provider='openai', model_id="gpt-5-nano")
