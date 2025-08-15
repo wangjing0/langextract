@@ -324,7 +324,7 @@ API costs vary by provider and model. Key factors affecting cost:
 - [ ] Add support fo Azure OpenAI
 - [ ] Improve example-driven extraction with more complex schemas
 - [ ] Self improving prompt, e.g. how to incooporate GPT-5 Prompt Optimizer  https://cookbook.openai.com/examples/gpt-5/prompt-optimization-cookbook
-
+- [ ] fix the extraction instability in some LLMs. 
 
 ## Contributing
 
