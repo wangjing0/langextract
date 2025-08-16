@@ -139,7 +139,7 @@ def print_extraction_summary(
     num_chunks: Optional number of chunks processed.
   """
   print(
-      f"{GREEN}✓{RESET} Extracted {BOLD}{num_extractions}{RESET} entities "
+      f"{GREEN}✓{RESET} Extracted {BOLD}{num_extractions}{RESET} instances "
       f"({BOLD}{unique_classes}{RESET} unique types)",
       flush=True,
   )
