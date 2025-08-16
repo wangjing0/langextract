@@ -3,14 +3,14 @@ import textwrap
 from langextract import inference
 
 # 1. Define the prompt and extraction rules
-prompt = textwrap.dedent("""
+prompt_1 = textwrap.dedent("""
     Extract Named Entities, Relationships, and their attributes in order of appearance.
     Use exact text for extractions. Do not paraphrase or overlap entities.
     Provide meaningful descriptions for each entity to add context.
     """)
 
 # 2. Provide a high-quality example to guide the model
-examples = [
+examples_1 = [
     lx.data.ExampleData(
         text="Models can exhibit dramatic personality shifts at deployment time in response to prompting or context. For example, Microsoft’s Bing chatbot would sometimes slip into a mode of threatening and manipulating users",
         extractions=[
@@ -51,10 +51,45 @@ examples = [
     )
 ]
 
-input_text = """
-Langfun is a PyGlove powered library that aims to make language models (LM) fun to work with. Its central principle is to enable seamless integration between natural language and programming by treating language as functions. Through the introduction of Object-Oriented Prompting, Langfun empowers users to prompt LLMs using objects and types, offering enhanced control and simplifying agent development.
+prompt = textwrap.dedent("""\
+    Extract Named Entities, Relationships and their attributes in order of appearance.
+    Use exact text for extractions. Do not paraphrase or overlap entities.
+    Provide meaningful descriptions for each entity to add context. 
+    Focus on Named Entity only, not all nouns, pronouns or adjective-noun compositions are considered Named entities, do not assume their types.
+    Relationships should contain subject and object entities that are only from extracted Entities.
+    Perform comprehensive extractions on all instances of entities, and relations in the text
+    """)
 
-To unlock the magic of Langfun, you can start with Langfun 101. Notably, Langfun is compatible with popular LLMs such as Gemini, GPT, Claude, all without the need for additional fine-tuning.
+
+examples = [
+    lx.data.ExampleData(
+        text="Models can exhibit dramatic personality shifts at deployment time in response to prompting or context. For example, Microsoft’s Bing chatbot would sometimes slip into a mode of threatening and manipulating users",
+        extractions=[
+            lx.data.Extraction(
+                extraction_class="NamedEntity",
+                extraction_text="Microsoft",
+                attributes={ "description": "Microsoft is a company that is assumed evil"}
+            ),
+            lx.data.Extraction(
+                extraction_class="NamedEntity",
+                extraction_text="Bing",
+                attributes={"description": "Bing is a product"}
+            ),
+            lx.data.Extraction(
+                extraction_class="Relationship",
+                extraction_text="Microsoft owns a chatbot product called Bing",
+                attributes={"subject": "Microsoft", 
+                            "relation": "owns",
+                            "object": "Bing",
+                            "evidence": "For example, Microsoft’s Bing chatbot"}
+            ),
+        ]
+    )
+]
+input_text = """
+Zochi is an artificial scientist system capable of end-to-end scientific discovery, from hypothesis generation through experimentation to peer-reviewed publication. Unlike previous systems that automate isolated aspects of scientific research, Zochi demonstrates comprehensive capabilities across the complete research lifecycle.
+
+We present empirical validation through multiple peer-reviewed publications accepted at ICLR 2025 workshops and ACL 2025, each containing novel methodological contributions and state-of-the-art experimental results. These include Compositional Subspace Representation Fine-tuning (CS-ReFT), which achieved a 93.94% win rate on the AlpacaEval benchmark on Llama-2-7b while using only 0.0098% of model parameters, the Tempest (formerly Siege) framework, a state-of-the-art jailbreak which identified critical vulnerabilities in language model safety measures through multi-turn adversarial testing.
 """
 
 def main(provider='google', model_id=None):
@@ -103,4 +138,4 @@ def main(provider='google', model_id=None):
 
 
 if __name__ == "__main__":
-    main(provider='openai', model_id="gpt-5-nano")
+    main(provider='anthropic')
