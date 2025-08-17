@@ -96,29 +96,42 @@ def main(provider='google', model_id=None):
     if provider == 'google':
         model_id = model_id or "gemini-2.5-flash"
         language_model_type = inference.GeminiLanguageModel
+        language_model_params = {}
     elif provider == 'openai':
         model_id = model_id or "gpt-5-nano"
         language_model_type = inference.OpenAILanguageModel
+        # Configure GPT-5 specific parameters
+        if model_id.startswith('gpt-5'):
+            language_model_params = {
+                'reasoning_effort':  'minimal',
+                'verbosity': 'high',
+            }
+        else:
+            language_model_params = {}
     elif provider == 'anthropic':
         model_id = model_id or "claude-3-5-haiku-latest"
         language_model_type = inference.ClaudeLanguageModel
+        language_model_params = {}
     elif provider == 'hf':
         model_id = model_id or 'openai/gpt-oss-120b:cerebras' # gpt-oss-120b, gpt-oss-20b
         language_model_type = inference.HFLanguageModel
+        language_model_params = {}
     else:
         raise ValueError(f"Invalid provider: {provider}")
 
-    # Process Romeo & Juliet directly from Project Gutenberg
+    # Process text with optimized parameters for each provider
     result = lx.extract(
         text_or_documents= input_text,
         prompt_description=prompt,
         examples=examples,
         model_id=model_id,
         language_model_type=language_model_type,
+        language_model_params=language_model_params,
         extraction_passes=1,    # Use 1 pass for GPT-5 stability
         max_workers=10,         # Single worker for debugging
         max_char_buffer=1000,   # Smaller contexts for better accuracy
-        debug=True
+        debug=True,
+        temperature=0.0, 
     )
 
     lx.io.save_annotated_documents([result], output_name=f"{provider}_extraction_results.jsonl")

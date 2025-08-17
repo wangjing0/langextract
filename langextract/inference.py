@@ -573,6 +573,8 @@ class OpenAILanguageModel(BaseLanguageModel):
   format_type: data.FormatType = data.FormatType.JSON
   temperature: float = 0.0
   max_workers: int = 10
+  reasoning_effort: str = 'medium'
+  verbosity: str = 'high'
   _client: openai.OpenAI | None = dataclasses.field(
       default=None, repr=False, compare=False
   )
@@ -589,6 +591,8 @@ class OpenAILanguageModel(BaseLanguageModel):
       format_type: data.FormatType = data.FormatType.JSON,
       temperature: float = 0.0,
       max_workers: int = 10,
+      reasoning_effort: str = 'medium',
+      verbosity: str = 'high',
       **kwargs,
   ) -> None:
     """Initialize the OpenAI language model.
@@ -611,6 +615,8 @@ class OpenAILanguageModel(BaseLanguageModel):
     self.format_type = format_type
     self.temperature = temperature
     self.max_workers = max_workers
+    self.reasoning_effort = reasoning_effort
+    self.verbosity = verbosity
     self._extra_kwargs = kwargs or {}
 
     if not self.api_key:
@@ -649,7 +655,8 @@ class OpenAILanguageModel(BaseLanguageModel):
                       'content': [{'type': 'text', 'text': prompt}]
                   }
               ],
-              'reasoning_effort': 'medium'
+              'reasoning_effort': self.reasoning_effort,
+              'verbosity': self.verbosity
           }
       else:
           api_params = {
