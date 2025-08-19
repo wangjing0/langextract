@@ -147,21 +147,9 @@ def extract(
         " one ExampleData object with sample extractions."
     )
 
-  if use_schema_constraints and fence_output:
-    warnings.warn(
-        "When `use_schema_constraints` is True and `fence_output` is True, "
-        "ensure that your schema constraint includes the code fence "
-        "delimiters, or set `fence_output` to False.",
-        UserWarning,
-    )
-
+  # Auto-optimize batch_length for better performance
   if max_workers is not None and batch_length < max_workers:
-    warnings.warn(
-        f"batch_length ({batch_length}) is less than max_workers"
-        f" ({max_workers}). Only {batch_length} workers will be used. For"
-        " optimal parallelization, set batch_length >= max_workers.",
-        UserWarning,
-    )
+    batch_length = max_workers
 
   if isinstance(text_or_documents, str) and io.is_url(text_or_documents):
     text_or_documents = io.download_text_from_url(text_or_documents)
@@ -171,91 +159,72 @@ def extract(
   )
   prompt_template.examples.extend(examples)
 
-  # Generate schema constraints if enabled
+  # Optimized schema generation
   model_schema = None
-  schema_constraint = None
-
-  # TODO: Unify schema generation.
-  if (
-      use_schema_constraints
-      and language_model_type in (inference.ClaudeLanguageModel, inference.OpenAILanguageModel, inference.GeminiLanguageModel)
+  if use_schema_constraints and language_model_type in (
+      inference.ClaudeLanguageModel, 
+      inference.OpenAILanguageModel, 
+      inference.GeminiLanguageModel, 
+      inference.HFLanguageModel,
   ):
-    model_schema = schema.StructuredSchema.from_examples(prompt_template.examples)
+    model_schema = schema.StructuredSchema.from_examples(examples)
 
   if not api_key:
-    # Load API key based on language model type
-    if language_model_type == inference.ClaudeLanguageModel:
-      api_key = os.environ.get("ANTHROPIC_API_KEY")
-    elif language_model_type == inference.OpenAILanguageModel:
-      api_key = os.environ.get("OPENAI_API_KEY")
-    elif language_model_type == inference.GeminiLanguageModel:
-      api_key = os.environ.get("GOOGLE_API_KEY")
-    elif language_model_type == inference.HFLanguageModel:
-      api_key = os.environ.get("HF_TOKEN")
+    # Streamlined API key detection
+    api_map = {
+      inference.ClaudeLanguageModel: ("ANTHROPIC_API_KEY", "Claude"),
+      inference.OpenAILanguageModel: ("OPENAI_API_KEY", "OpenAI"),
+      inference.GeminiLanguageModel: ("GOOGLE_API_KEY", "Gemini"),
+      inference.HFLanguageModel: ("HF_TOKEN", "HuggingFace")
+    }
+    
+    env_var, model_name = api_map[language_model_type]
+    api_key = os.environ.get(env_var)
+    if not api_key:
+      raise ValueError(f"API key required for {model_name}: set`{env_var}`")
 
-    # Check if API key is required for cloud-hosted models
-    cloud_models = (inference.ClaudeLanguageModel, inference.OpenAILanguageModel, inference.GeminiLanguageModel, inference.HFLanguageModel)
-    if not api_key and language_model_type in cloud_models:
-      model_name, env_var = "Unknown", "API_KEY"  # Default values
-      if language_model_type == inference.ClaudeLanguageModel:
-        model_name, env_var = "Claude", "ANTHROPIC_API_KEY"
-      elif language_model_type == inference.OpenAILanguageModel:
-        model_name, env_var = "OpenAI", "OPENAI_API_KEY"
-      elif language_model_type == inference.GeminiLanguageModel:
-        model_name, env_var = "Gemini", "GOOGLE_API_KEY"
-      elif language_model_type == inference.HFLanguageModel:
-        model_name, env_var = "HuggingFace", "HF_TOKEN"
-      
-      raise ValueError(
-          f"API key must be provided for {model_name} models via the api_key"
-          f" parameter or the {env_var} environment variable"
-      )
-
-  # Build base kwargs - different models expect different parameter names
-  base_lm_kwargs: dict[str, Any] = {
-      "api_key": api_key,
-      "format_type": format_type,
-      "temperature": temperature,
-      "max_workers": max_workers,
-  }
-  
-  # Add model-specific parameters
+  # Streamlined parameter building
   if language_model_type == inference.OllamaLanguageModel:
-    base_lm_kwargs.update({
-        "model": model_id,  # OllamaLanguageModel uses 'model' instead of 'model_id'
+    lm_kwargs = {
+        "model": model_id,
         "model_url": model_url,
-        "constraint": schema_constraint,
-    })
+        "api_key": api_key,
+        "format_type": format_type,
+        "temperature": temperature,
+        "max_workers": max_workers,
+    }
     if seed is not None:
-      base_lm_kwargs["seed"] = seed
+      lm_kwargs["seed"] = seed
   else:
-    # Claude, OpenAI, and Gemini models use 'model_id'
-    base_lm_kwargs["model_id"] = model_id
-    
-    # Add schema for models that support it
-    if language_model_type in (inference.ClaudeLanguageModel, inference.OpenAILanguageModel, inference.GeminiLanguageModel, inference.HFLanguageModel):
-      base_lm_kwargs["structured_schema"] = model_schema
-    
-    # Add seed for non-Ollama models
+    lm_kwargs = {
+        "model_id": model_id,
+        "api_key": api_key,
+        "format_type": format_type,
+        "temperature": temperature,
+        "max_workers": max_workers,
+    }
+    if model_schema:
+      lm_kwargs["structured_schema"] = model_schema
     if seed is not None:
-      base_lm_kwargs["seed"] = seed
+      lm_kwargs["seed"] = seed
 
-  # Merge user-provided params which have precedence over defaults.
-  base_lm_kwargs.update(language_model_params or {})
+  # Apply user overrides directly
+  if language_model_params:
+    lm_kwargs.update(language_model_params)
 
-  filtered_kwargs = {k: v for k, v in base_lm_kwargs.items() if v is not None}
+  language_model = language_model_type(**lm_kwargs)
 
-  language_model = language_model_type(**filtered_kwargs)
-
-  resolver_defaults = {
+  # Streamlined resolver creation
+  resolver_kwargs = {
       "fence_output": fence_output,
       "format_type": format_type,
       "extraction_attributes_suffix": "_attributes",
       "extraction_index_suffix": None,
   }
-  resolver_defaults.update(resolver_params or {})
+  if resolver_params:
+    resolver_kwargs.update(resolver_params)
 
-  res = resolver.Resolver(**resolver_defaults)
+  res = resolver.Resolver(**resolver_kwargs)
 
   annotator = annotation.Annotator(
       language_model=language_model,
