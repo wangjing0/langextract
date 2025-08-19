@@ -128,11 +128,12 @@ def main(provider='google', model_id=None):
         model_id=model_id,
         language_model_type=language_model_type,
         language_model_params=language_model_params,
-        extraction_passes=1,    # Use 1 pass for GPT-5 stability
-        max_workers=10,         # Single worker for debugging
+        extraction_passes=1,    # 1 pass for less token usage
+        max_workers=10,         # Workers for parallel processing
         max_char_buffer=1000,   # Smaller contexts for better accuracy
         debug=True,
-        temperature=0.0, 
+        temperature=0.0,        # Deterministic temperature
+        seed=42,                # Fixed seed for reproducible results
     )
 
     lx.io.save_annotated_documents([result], output_name=f"{provider}_extraction_results.jsonl")
@@ -161,9 +162,5 @@ if __name__ == "__main__":
                        help='Specific model ID to use (overrides provider default)')
     
     args = parser.parse_args()
-    
-    print(f"🚀 Running LangExtract with {args.provider} provider")
-    if args.model:
-        print(f"📋 Using model: {args.model}")
-    
+
     main(provider=args.provider, model_id=args.model)
