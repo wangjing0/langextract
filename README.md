@@ -39,8 +39,7 @@ LangExtract requires Python 3.8+ and installs the following key dependencies:
 - `anthropic` - Anthropic Claude API client  
 - `openai` - OpenAI GPT API client
 - `huggingface-hub` - HuggingFace API client
-- `requests` - HTTP client for Ollama and URL downloads
-- `pydantic` - Data validation and serialization
+- `ollama` - Ollama API client
 
 ## Language Model Classes
 
@@ -132,32 +131,7 @@ model = OllamaLanguageModel(
 Here's a complete example based on the included `example.py`:
 
 ```bash
-uv run example.py
-```
-
-### Use cases from `example.py`
-
-The included script demonstrates end‑to‑end extraction driven by a natural‑language prompt and a high‑quality example, across multiple model providers. It:
-
-- Defines a prompt and a guiding example with `lx.data.ExampleData` and `lx.data.Extraction`.
-- Selects a provider and model (`openai`, `google`, `anthropic`, or `hf`) and maps it to the matching `inference.*LanguageModel`.
-- Runs `lx.extract(...)` with tuned parameters (`extraction_passes=1`, `max_workers=10`, `max_char_buffer=1000`).
-- Saves results to `output/{provider}_extraction_results.jsonl` and renders an HTML visualization at `output/{provider}_extraction_results_visualization.html`.
-
-Run the example for different providers (ensure the corresponding API key env vars are set as shown below):
-
-```bash
-# OpenAI (default in __main__)
-uv run example.py
-
-# Google Gemini
-uv run python -c "import example; example.main('google')"
-
-# Anthropic Claude
-uv run python -c "import example; example.main('anthropic')"
-
-# HuggingFace OpenAI-compatible router (open-weight models)
-uv run python -c "import example; example.main('hf')"
+uv run example.py --provider openai --model gpt-5-nano
 ```
 
 Expected outputs:
@@ -203,7 +177,7 @@ result = lx.extract(
     text_or_documents=input_text,
     prompt_description=prompt,
     examples=examples,
-    extraction_passes=3,  # Run 3 independent passes
+    extraction_passes=3,  # Run 3 independent passes, and merge them
     model_id='claude-3-5-haiku-latest',
     language_model_type=inference.ClaudeLanguageModel
 )
@@ -282,26 +256,6 @@ results = lx.extract(
     examples=examples
 )
 ```
-
-## API Reference
-
-### Core Functions
-- `lx.extract()` - Main extraction function
-- `lx.visualize()` - Generate HTML visualizations
-- `lx.io.save_annotated_documents()` - Save results to JSONL
-
-### Key Classes
-- `lx.data.ExampleData` - Training examples for extraction
-- `lx.data.Extraction` - Individual extraction results
-- `lx.data.AnnotatedDocument` - Document with extractions
-- `lx.data.Document` - Input document structure
-
-### Language Models
-- `inference.ClaudeLanguageModel` - Anthropic Claude
-- `inference.OpenAILanguageModel` - OpenAI GPT
-- `inference.GeminiLanguageModel` - Google Gemini
-- `inference.HFLanguageModel` - HuggingFace models via OpenAI-compatible API
-- `inference.OllamaLanguageModel` - Local Ollama models
 
 ## Cost Considerations
 

@@ -52,6 +52,7 @@ examples_1 = [
     )
 ]
 
+# Type free NER and RE extraction
 prompt = textwrap.dedent("""\
     Extract Named Entities, Relationships and their attributes in order of appearance.
     Use exact text for extractions. Do not paraphrase or overlap entities.
@@ -104,7 +105,7 @@ def main(provider='google', model_id=None):
         # Configure GPT-5 specific parameters
         if model_id.startswith('gpt-5'):
             language_model_params = {
-                'reasoning_effort':  'minimal',
+                'reasoning_effort': 'minimal',
                 'verbosity': 'high',
             }
         else:
@@ -120,7 +121,6 @@ def main(provider='google', model_id=None):
     else:
         raise ValueError(f"Invalid provider: {provider}")
 
-    # Process text with optimized parameters for each provider
     result = lx.extract(
         text_or_documents= input_text,
         prompt_description=prompt,
@@ -142,10 +142,8 @@ def main(provider='google', model_id=None):
 
     # Convert HTML object to string if needed
     if hasattr(html_content, 'data'):
-        # HTML object from IPython.display
         html_string = html_content.data
     else:
-        # Already a string
         html_string = html_content
 
     with open(f"output/{provider}_extraction_results_visualization.html", "w") as f:
@@ -153,7 +151,7 @@ def main(provider='google', model_id=None):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='LangExtract Example - Extract entities and relationships from text')
+    parser = argparse.ArgumentParser(description='LangExtract Example')
     parser.add_argument('--provider', '-p', 
                        choices=['google', 'openai', 'anthropic', 'hf'],
                        default='openai',
