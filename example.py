@@ -1,3 +1,4 @@
+import argparse
 import langextract as lx
 import textwrap
 from langextract import inference
@@ -151,4 +152,18 @@ def main(provider='google', model_id=None):
 
 
 if __name__ == "__main__":
-    main(provider='openai')
+    parser = argparse.ArgumentParser(description='LangExtract Example - Extract entities and relationships from text')
+    parser.add_argument('--provider', '-p', 
+                       choices=['google', 'openai', 'anthropic', 'hf'],
+                       default='openai',
+                       help='LLM provider to use (default: openai)')
+    parser.add_argument('--model', '-m',
+                       help='Specific model ID to use (overrides provider default)')
+    
+    args = parser.parse_args()
+    
+    print(f"🚀 Running LangExtract with {args.provider} provider")
+    if args.model:
+        print(f"📋 Using model: {args.model}")
+    
+    main(provider=args.provider, model_id=args.model)
