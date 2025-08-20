@@ -111,8 +111,8 @@ _VISUALIZATION_CSS = textwrap.dedent("""\
     }
     .lx-text-window {
       font-family: monospace; white-space: pre-wrap; border: 1px solid #90caf9;
-      padding: 12px; max-height: 260px; overflow-y: auto; margin-bottom: 12px;
-      line-height: 1.6;
+      padding: 12px; height: 60vh; min-height: 200px; max-height: 80vh; 
+      overflow-y: auto; margin-bottom: 12px; line-height: 1.6; resize: vertical;
     }
     .lx-attributes-panel {
       background: #fafafa; border: 1px solid #90caf9; border-radius: 6px;
