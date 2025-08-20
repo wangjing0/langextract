@@ -168,33 +168,26 @@ def main(provider='google', model_id=None):
         raise ValueError(f"Invalid provider: {provider}")
 
     result = lx.extract(
-        text_or_documents= input_text,
+        text_or_documents=input_text,
         prompt_description=prompt,
         examples=examples,
         model_id=model_id,
         language_model_type=language_model_type,
         language_model_params=language_model_params,
-        extraction_passes=1,    # 1 pass for less token usage
+        extraction_passes=3,    # 1 pass for token usage, more passes for better coverage
         max_workers=10,         # Workers for parallel processing
-        max_char_buffer=1000,   # Smaller contexts for better accuracy
+        max_char_buffer=1_000,  # Smaller contexts for better accuracy
         debug=True,
         temperature=0.0,        # Deterministic temperature
         seed=42,                # Fixed seed for reproducible results
     )
-
-    lx.io.save_annotated_documents([result], output_name=f"{provider}_extraction_results.jsonl")
-
-    html_content = lx.visualize(f"output/{provider}_extraction_results.jsonl")
-
-    # Convert HTML object to string if needed
-    if hasattr(html_content, 'data'):
-        html_string = html_content.data
-    else:
-        html_string = html_content
-
-    with open(f"output/{provider}_extraction_results_visualization.html", "w") as f:
-        f.write(html_string)
-
+    output_file = lx.io.save_annotated_documents([result], output_name=f"{provider}_extraction_results.jsonl")
+    
+    html_content = lx.visualize(output_file)
+    
+    html_path = output_file.with_suffix('.html')
+    with open(html_path, "w") as f:
+        f.write(getattr(html_content, 'data', html_content))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='LangExtract Example')
@@ -203,7 +196,7 @@ if __name__ == "__main__":
                        default='openai',
                        help='LLM provider to use (default: openai)')
     parser.add_argument('--model', '-m',
-                       help='Specific model ID to use (overrides provider default)')
+                       help='Specific model to use (overrides provider default)')
     
     args = parser.parse_args()
 

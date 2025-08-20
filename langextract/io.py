@@ -86,7 +86,7 @@ def save_annotated_documents(
     output_dir: pathlib.Path | None = None,
     output_name: str = 'data.jsonl',
     show_progress: bool = True,
-) -> None:
+) -> pathlib.Path:
   """Saves annotated documents to a JSON Lines file.
 
   Args:
@@ -132,6 +132,8 @@ def save_annotated_documents(
 
   if show_progress:
     progress.print_save_complete(doc_count, str(output_file))
+  
+  return output_file
 
 
 def load_annotated_documents_jsonl(

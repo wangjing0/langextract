@@ -31,6 +31,21 @@ Or using uv (recommended for development):
 uv init && uv sync
 ```
 
+## Quick Start Example
+
+Here's a complete example based on the included `example.py`:
+
+```bash
+uv run example.py --provider openai --model gpt-5-nano
+```
+
+Expected outputs:
+
+- JSONL: `output/{provider}_extraction_results.jsonl`
+- HTML visualization: `output/{provider}_extraction_results.html`
+
+Tip: The prompt and the in‑code example in `example.py` show how to nudge models toward high‑quality, consistent entity and relationship extraction using exact text spans.
+
 ### Dependencies
 
 LangExtract requires Python 3.8+ and installs the following key dependencies:
@@ -124,22 +139,6 @@ model = OllamaLanguageModel(
     constraint=None  # Optional schema constraint
 )
 ```
-
-
-## Quick Start Example
-
-Here's a complete example based on the included `example.py`:
-
-```bash
-uv run example.py --provider openai --model gpt-5-nano
-```
-
-Expected outputs:
-
-- JSONL: `output/{provider}_extraction_results.jsonl`
-- HTML visualization: `output/{provider}_extraction_results_visualization.html`
-
-Tip: The prompt and the in‑code example in `example.py` show how to nudge models toward high‑quality, consistent entity and relationship extraction using exact text spans.
 
 ## Environment Variables and Configuration
 

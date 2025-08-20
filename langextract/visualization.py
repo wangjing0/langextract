@@ -306,7 +306,7 @@ def _build_legend_html(color_map: dict[str, str]) -> str:
         f' style="background-color:{colour};">{html.escape(extraction_class)}</span>'
     )
   return (
-      '<div class="lx-legend">Highlights Legend:'
+      '<div class="lx-legend">Extraction Classes:'
       f' {" ".join(legend_items)}</div>'
   )
 
@@ -461,7 +461,7 @@ def _build_visualization_html(
                  onchange="jumpToExtraction(this.value)">
         </div>
         <div class="lx-status-text">
-          Entity <span id="entityInfo">1/{len(extractions)}</span> | 
+          <span id="entityInfo">1/{len(extractions)}</span> | 
           Pos <span id="posInfo">{pos_info_str}</span>
         </div>
       </div>
