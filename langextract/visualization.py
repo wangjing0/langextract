@@ -34,6 +34,7 @@ import os
 import pathlib
 from langextract import data as _data
 from langextract import io as _io
+from langextract import progress
 
 # Fallback if IPython is not present
 try:
@@ -344,10 +345,22 @@ def _prepare_extraction_data(
     extractions: list[_data.Extraction],
     color_map: dict[str, str],
     context_chars: int = 150,
+    show_progress: bool = False,
 ) -> list[dict]:
   """Prepares JavaScript data for extractions."""
   extraction_data = []
-  for i, extraction in enumerate(extractions):
+  
+  # Create progress bar for processing extractions if needed
+  iterator = extractions
+  if show_progress and len(extractions) > 100:
+    pbar = progress.create_extraction_progress_bar(
+        extractions, 
+        model_info="visualization", 
+        disable=False
+    )
+    iterator = pbar
+  
+  for i, extraction in enumerate(iterator):
     # Assertions to inform pytype about the invariants guaranteed by _filter_valid_extractions
     assert (
         extraction.char_interval is not None
@@ -403,6 +416,7 @@ def _build_visualization_html(
     color_map: dict[str, str],
     animation_speed: float = 1.0,
     show_legend: bool = True,
+    show_progress: bool = False,
 ) -> str:
   """Builds the complete visualization HTML."""
   if not extractions:
@@ -425,7 +439,7 @@ def _build_visualization_html(
       text, sorted_extractions, color_map
   )
   extraction_data = _prepare_extraction_data(
-      text, sorted_extractions, color_map
+      text, sorted_extractions, color_map, show_progress=show_progress
   )
   legend_html = _build_legend_html(color_map) if show_legend else ''
 
@@ -540,6 +554,8 @@ def visualize(
     animation_speed: float = 1.0,
     show_legend: bool = True,
     gif_optimized: bool = True,
+    show_progress: bool = True,
+    save_html: bool = False,
 ) -> 'HTML | str':
   """Visualises extraction data as animated highlighted HTML.
 
@@ -550,6 +566,10 @@ def visualize(
       to colours.
     gif_optimized: If ``True``, applies GIF-optimized styling with larger fonts,
       better contrast, and improved dimensions for video capture.
+    save_html: If ``True``, saves the visualization as an HTML file alongside
+      the input JSONL file.
+    show_progress: If ``True``, shows progress bars during processing for large
+      datasets (>100 extractions).
 
   Returns:
     An :class:`IPython.display.HTML` object if IPython is available, otherwise
@@ -561,9 +581,20 @@ def visualize(
     if not file_path.exists():
       raise FileNotFoundError(f'JSONL file not found: {file_path}')
 
+    if show_progress:
+      # Show progress for loading documents
+      file_size = file_path.stat().st_size if file_path.exists() else None
+      load_pbar = progress.create_load_progress_bar(str(file_path), file_size)
+      load_pbar.set_description(f"{progress.BLUE}{progress.BOLD}LangExtract{progress.RESET}: Loading for visualization")
+      load_pbar.update(0)
+
     documents = list(_io.load_annotated_documents_jsonl(file_path))
     if not documents:
       raise ValueError(f'No documents found in JSONL file: {file_path}')
+
+    if show_progress:
+      load_pbar.close()
+      progress.print_load_complete(len(documents), str(file_path))
 
     annotated_doc = documents[0]  # Use first document
   else:
@@ -586,6 +617,15 @@ def visualize(
     full_html = _VISUALIZATION_CSS + empty_html
     return HTML(full_html) if HTML is not None else full_html
 
+  # Show extraction summary if progress is enabled
+  if show_progress:
+    unique_classes = len({e.extraction_class for e in valid_extractions})
+    progress.print_extraction_summary(
+        num_extractions=len(valid_extractions),
+        unique_classes=unique_classes,
+        chars_processed=len(annotated_doc.text) if annotated_doc.text else 0
+    )
+
   color_map = _assign_colors(valid_extractions)
 
   visualization_html = _build_visualization_html(
@@ -594,6 +634,7 @@ def visualize(
       color_map,
       animation_speed,
       show_legend,
+      show_progress,
   )
 
   full_html = _VISUALIZATION_CSS + visualization_html
@@ -604,5 +645,25 @@ def visualize(
         'class="lx-animated-wrapper"',
         'class="lx-animated-wrapper lx-gif-optimized"',
     )
+
+  # Save HTML file if requested and data_source is a file path
+  if save_html and isinstance(data_source, (str, pathlib.Path)):
+    output_file = pathlib.Path(data_source)
+    html_path = output_file.with_suffix('.html')
+    
+    if show_progress:
+      save_pbar = progress.create_save_progress_bar(str(html_path))
+      save_pbar.set_description(f"{progress.BLUE}{progress.BOLD}LangExtract{progress.RESET}: Saving visualization")
+      save_pbar.update(0)
+    
+    with open(html_path, "w") as f:
+        f.write(getattr(full_html, 'data', full_html))
+    
+    if show_progress:
+      save_pbar.close()
+      print(f"{progress.GREEN}✓{progress.RESET} Saved visualization to {progress.GREEN}{html_path.name}{progress.RESET}")
+
+  if show_progress:
+    progress.print_extraction_complete()
 
   return HTML(full_html) if HTML is not None else full_html

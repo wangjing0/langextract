@@ -57,6 +57,8 @@ prompt = textwrap.dedent("""\
     Extract NamedEntities, EntityRelations, HyperRelations and their attributes in order of appearance.
     Use exact text for extractions. Do not paraphrase or overlap entities.
     Provide meaningful descriptions for each entity to add context. 
+    Provide the canonical name for each entity given the context, which is the full name of the entity that is used uniformly across different texts.
+    Provide the type for each entity. type is the type of the entity.
     Focus on Named Entity only, not all nouns, pronouns or adjective-noun compositions are considered Named entities, do not assume stereotypic types, but infer their types from the context.
     EntityRelations should contain subject and object entities that are only from extracted Entities.
     HyperRelations should contain a set of NamedEntities as members, that are related to each other semantically given the context, without specifying the pairwise relations.  For instance, location, person1, person2, organization1, organization2 are related in an event, they should be extracted as a HyperRelation.
@@ -72,17 +74,17 @@ Models can exhibit dramatic personality shifts at deployment time in response to
             lx.data.Extraction(
                 extraction_class="NamedEntity",
                 extraction_text="Microsoft",
-                attributes={ "description": "Microsoft is a company that is assumed evil", "type": "Organization"}
+                attributes={ "description": "Microsoft is a company that is assumed evil", "type": "Organization", "canonical_name": "Microsoft"}
             ),
             lx.data.Extraction(
                 extraction_class="NamedEntity",
                 extraction_text="Bing",
-                attributes={"description": "Bing is a product", "type": "Product"}
+                attributes={"description": "Bing is a product", "type": "Product", "canonical_name": "Bing"}
             ),
             lx.data.Extraction(
                 extraction_class="NamedEntity",
                 extraction_text="chatbot",
-                attributes={"description": "chatbot is a function of the product Bing", "type": "Product"}
+                attributes={"description": "chatbot is a function of the product Bing", "type": "Product", "canonical_name": "Chatbot"}
             ),
             lx.data.Extraction(
                 extraction_class="EntityRelation",
@@ -183,11 +185,8 @@ def main(provider='google', model_id=None):
     )
     output_file = lx.io.save_annotated_documents([result], output_name=f"{provider}_extraction_results.jsonl")
     
-    html_content = lx.visualize(output_file)
-    
-    html_path = output_file.with_suffix('.html')
-    with open(html_path, "w") as f:
-        f.write(getattr(html_content, 'data', html_content))
+    html_content = lx.visualize(output_file, save_html=True)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='LangExtract Example')
