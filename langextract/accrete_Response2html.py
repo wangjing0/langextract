@@ -9,9 +9,10 @@ import langextract as lx
 def find_entity_position(entity_text: str, document_text: str, tokenized_text: tokenizer.TokenizedText = None) -> tuple[CharInterval | None, tokenizer.TokenInterval | None]:
     """
     Find the first occurrence of an entity in the document text and return its position.
+    Only matches complete words/phrases with proper word boundaries and exact case matching.
     
     Args:
-        entity_text: The entity text to search for
+        entity_text: The entity text to search for (case-sensitive)
         document_text: The full document text to search in
         tokenized_text: Optional pre-tokenized text for efficiency
         
@@ -21,15 +22,25 @@ def find_entity_position(entity_text: str, document_text: str, tokenized_text: t
     if not document_text or not entity_text:
         return None, None
     
-    # Find character position (case-insensitive search)
-    entity_lower = entity_text.lower()
-    doc_lower = document_text.lower()
-    char_start = doc_lower.find(entity_lower)
+    import re
     
-    if char_start == -1:
+    # Escape special regex characters in entity_text
+    escaped_entity = re.escape(entity_text)
+    
+    # Create pattern with flexible word boundaries
+    # Use lookbehind and lookahead to ensure the entity is not part of another word
+    # (?<!\w) = negative lookbehind for word character
+    # (?!\w) = negative lookahead for word character
+    pattern = r'(?<!\w)' + escaped_entity + r'(?!\w)'
+    
+    # Find character position (case-sensitive search with word boundaries)
+    match = re.search(pattern, document_text)
+    
+    if not match:
         return None, None
     
-    char_end = char_start + len(entity_text)
+    char_start = match.start()
+    char_end = match.end()
     char_interval = CharInterval(start_pos=char_start, end_pos=char_end)
     
     # Find token position
@@ -55,7 +66,6 @@ def find_entity_position(entity_text: str, document_text: str, tokenized_text: t
             start_index=start_token_idx,
             end_index=end_token_idx
         )
-    
     return char_interval, token_interval
 
 
@@ -110,12 +120,15 @@ def entity_response_to_annotated_document(entity_response: EntityResponse,
 
 def test_adapter_with_Accrete_extraction(file_path: str) -> str:
     import pandas, json
+    from typing import Iterable
     with open(file_path, 'r') as f:
         data = pandas.DataFrame(json.load(f))
+    data['char_len'] = data['text'].apply(len)
+    data.sort_values(by='char_len', ascending=False, inplace=True)
     print(data.head(20))
-    # Create a list to store entities with document_index
-    annotated_docs = []
-    for _, row in data[-1:].iterrows():
+    # Create an iterable to store entities with document_index
+    annotated_docs: Iterable[AnnotatedDocument] = []
+    for _, row in data[:10].iterrows():
         entities = []
         for ent in row.entities:
             if isinstance(ent, dict):
