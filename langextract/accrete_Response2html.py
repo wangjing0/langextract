@@ -6,9 +6,9 @@ from langextract import tokenizer
 import langextract as lx
 
 
-def find_entity_position(entity_text: str, document_text: str, tokenized_text: tokenizer.TokenizedText = None) -> tuple[CharInterval | None, tokenizer.TokenInterval | None]:
+def find_entity_positions(entity_text: str, document_text: str, tokenized_text: tokenizer.TokenizedText = None) -> list[tuple[CharInterval, tokenizer.TokenInterval | None]]:
     """
-    Find the first occurrence of an entity in the document text and return its position.
+    Find all occurrences of an entity in the document text and return their positions.
     Only matches complete words/phrases with proper word boundaries and exact case matching.
     
     Args:
@@ -17,10 +17,10 @@ def find_entity_position(entity_text: str, document_text: str, tokenized_text: t
         tokenized_text: Optional pre-tokenized text for efficiency
         
     Returns:
-        Tuple of (CharInterval, TokenInterval) or (None, None) if not found
+        List of tuples (CharInterval, TokenInterval) for all found occurrences, or empty list if not found
     """
     if not document_text or not entity_text:
-        return None, None
+        return []
     
     import re
     
@@ -33,40 +33,48 @@ def find_entity_position(entity_text: str, document_text: str, tokenized_text: t
     # (?!\w) = negative lookahead for word character
     pattern = r'(?<!\w)' + escaped_entity + r'(?!\w)'
     
-    # Find character position (case-sensitive search with word boundaries)
-    match = re.search(pattern, document_text)
-    
-    if not match:
-        return None, None
-    
-    char_start = match.start()
-    char_end = match.end()
-    char_interval = CharInterval(start_pos=char_start, end_pos=char_end)
-    
-    # Find token position
+    # Pre-tokenize text once if not provided for efficiency
     if tokenized_text is None:
         tokenized_text = tokenizer.tokenize(document_text)
     
-    # Find tokens that overlap with the character interval
-    start_token_idx = None
-    end_token_idx = None
+    # Find all character positions (case-sensitive search with word boundaries)
+    matches = list(re.finditer(pattern, document_text))
     
-    for i, token in enumerate(tokenized_text.tokens):
-        token_start = token.char_interval.start_pos
-        token_end = token.char_interval.end_pos
+    if not matches:
+        return []
+    
+    results = []
+    
+    for match in matches:
+        char_start = match.start()
+        char_end = match.end()
+        char_interval = CharInterval(start_pos=char_start, end_pos=char_end)
         
-        # Check if token overlaps with entity character interval
-        if (token_start < char_end and token_end > char_start):
-            if start_token_idx is None:
-                start_token_idx = i
-            end_token_idx = i + 1  # end_index is exclusive
+        # Find tokens that overlap with the character interval
+        start_token_idx = None
+        end_token_idx = None
+        
+        for i, token in enumerate(tokenized_text.tokens):
+            token_start = token.char_interval.start_pos
+            token_end = token.char_interval.end_pos
+            
+            # Check if token overlaps with entity character interval
+            if (token_start < char_end and token_end > char_start):
+                if start_token_idx is None:
+                    start_token_idx = i
+                end_token_idx = i + 1  # end_index is exclusive
+        
+        # Create token interval if tokens were found
+        token_interval = None
+        if start_token_idx is not None and end_token_idx is not None:
+            token_interval = tokenizer.TokenInterval(
+                start_index=start_token_idx,
+                end_index=end_token_idx
+            )
+        
+        results.append((char_interval, token_interval))
     
-    if start_token_idx is not None and end_token_idx is not None:
-        token_interval = tokenizer.TokenInterval(
-            start_index=start_token_idx,
-            end_index=end_token_idx
-        )
-    return char_interval, token_interval
+    return results
 
 
 def entity_response_to_annotated_document(entity_response: EntityResponse, 
@@ -92,25 +100,28 @@ def entity_response_to_annotated_document(entity_response: EntityResponse,
     
     for idx, entity in enumerate(entity_response.output):
         if entity.isNamedEntity:
-            # Find entity position in document text
-            char_interval, token_interval = find_entity_position(
+            # Find all entity positions in document text
+            positions = find_entity_positions(
                 entity.NamedEntity, text, tokenized_text
             )
             
-            extraction = Extraction(
-                extraction_class=entity.NamedEntityType.BroadType,
-                extraction_text=entity.NamedEntity,
-                extraction_index=idx,
-                char_interval=char_interval,
-                token_interval=token_interval,
-                attributes={
-                    'Description': entity.NamedEntityDescription,
-                    'CanonicalName': entity.CanonicalNamedEntity,
-                    'SpecificType': entity.NamedEntityType.SpecificType,
-                    'FineType': entity.NamedEntityType.FineType
-                }
-            )
-            extractions.append(extraction)
+            # Create an extraction for each occurrence
+            for occurrence_idx, (char_interval, token_interval) in enumerate(positions):
+                extraction = Extraction(
+                    extraction_class=entity.NamedEntityType.BroadType,
+                    extraction_text=entity.NamedEntity,
+                    extraction_index=idx * 1000 + occurrence_idx,  # Unique index for each occurrence
+                    char_interval=char_interval,
+                    token_interval=token_interval,
+                    attributes={
+                        'Description': entity.NamedEntityDescription,
+                        'CanonicalName': entity.CanonicalNamedEntity,
+                        'SpecificType': entity.NamedEntityType.SpecificType,
+                        'FineType': entity.NamedEntityType.FineType,
+                        'OccurrenceIndex': occurrence_idx
+                    }
+                )
+                extractions.append(extraction)
     
     return AnnotatedDocument(
         document_id=document_id,
@@ -123,12 +134,12 @@ def test_adapter_with_Accrete_extraction(file_path: str) -> str:
     from typing import Iterable
     with open(file_path, 'r') as f:
         data = pandas.DataFrame(json.load(f))
-    data['char_len'] = data['text'].apply(len)
-    data.sort_values(by='char_len', ascending=False, inplace=True)
+    data['_len'] = data['text'].apply(len)
+    data.sort_values(by='_len', ascending=False, inplace=True)
     print(data.head(20))
     # Create an iterable to store entities with document_index
     annotated_docs: Iterable[AnnotatedDocument] = []
-    for _, row in data[:10].iterrows():
+    for _, row in data[1:10].iterrows():
         entities = []
         for ent in row.entities:
             if isinstance(ent, dict):

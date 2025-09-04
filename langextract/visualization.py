@@ -228,9 +228,18 @@ def _build_highlighted_text(
     extractions: List of extraction objects with char_intervals.
     color_map: Mapping of extraction_class to colour.
   """
+  # Sort extractions by position to ensure proper indexing
+  def _sort_key(extraction):
+    start = extraction.char_interval.start_pos
+    end = extraction.char_interval.end_pos
+    span_length = end - start
+    return (start, -span_length)  # longer spans first
+  
+  sorted_extractions = sorted(extractions, key=_sort_key)
+  
   points = []
   span_lengths = {}
-  for index, extraction in enumerate(extractions):
+  for index, extraction in enumerate(sorted_extractions):
     if (
         not extraction.char_interval
         or extraction.char_interval.start_pos is None
@@ -242,6 +251,7 @@ def _build_highlighted_text(
 
     start_pos = extraction.char_interval.start_pos
     end_pos = extraction.char_interval.end_pos
+    # Use index directly since extractions are already sorted in the desired order
     points.append(SpanPoint(start_pos, TagType.START, index, extraction))
     points.append(SpanPoint(end_pos, TagType.END, index, extraction))
     span_lengths[index] = end_pos - start_pos
@@ -278,10 +288,10 @@ def _build_highlighted_text(
 
     if point.tag_type == TagType.START:
       colour = color_map.get(point.extraction.extraction_class, '#ffff8d')
-      highlight_class = ' lx-current-highlight' if point.span_idx == 0 else ''
-
+      # Don't add lx-current-highlight here - let JavaScript handle it dynamically
+      
       span_html = (
-          f'<span class="lx-highlight{highlight_class}"'
+          f'<span class="lx-highlight"'
           f' data-idx="{point.span_idx}" style="background-color:{colour};">'
       )
       html_parts.append(span_html)
